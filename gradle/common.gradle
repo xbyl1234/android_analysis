@@ -1,0 +1,136 @@
+import java.util.zip.CRC32
+import java.util.zip.CheckedInputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
+
+
+def runCommand(String... command) {
+    ProcessBuilder processBuilder = new ProcessBuilder()
+    processBuilder.redirectErrorStream(true)
+    processBuilder.command(command)
+    Process process = processBuilder.start()
+    println("process start")
+    InputStreamReader inputReader = new InputStreamReader(process.getInputStream(), "UTF-8")
+    BufferedReader bufferedReader = new BufferedReader(inputReader)
+    String line
+    while ((line = bufferedReader.readLine()) != null) {
+        println(line)
+    }
+    process.waitFor()
+    println("process finish")
+}
+
+//解压
+def decompressDir(String srcPath, String destPath) throws Exception {
+    println("decompress " + srcPath + " to " + destPath)
+    File file = new File(srcPath)
+    if (!file.exists()) {
+        throw new RuntimeException(srcPath + " not exists")
+    }
+
+    ZipFile zf = new ZipFile(file)
+    Enumeration entries = zf.entries()
+    ZipEntry entry
+    while (entries.hasMoreElements()) {
+        entry = (ZipEntry) entries.nextElement()
+        //非文件
+        if (entry.isDirectory()) {
+            String dirPath = destPath + File.separator + entry.getName()
+            File dir = new File(dirPath)
+            dir.mkdirs()
+        } else {
+            //文件
+            File f = new File(destPath + File.separator + entry.getName())
+            if (!f.exists()) {
+                f.createNewFile()
+            }
+
+            // 文件数据写入文件
+            InputStream is = zf.getInputStream(entry)
+            FileOutputStream fos = new FileOutputStream(f)
+
+            int count
+            byte[] buf = new byte[1024 * 4]
+            while ((count = is.read(buf)) != -1) {
+                fos.write(buf, 0, count)
+            }
+
+            is.close()
+            fos.close()
+        }
+    }
+    println("decompress finish")
+}
+
+def isDebug() {
+    def taskName = gradle.getStartParameter().taskNames.find { taskName ->
+        return taskName.contains("assemble") && taskName.contains("app")
+    }
+    if (taskName == null) {
+        return -1
+    }
+    return taskName.contains("Debug") ? 1 : 0
+}
+
+def buildDex(String name) {
+    String projectPath = getProjectDir().absolutePath + "\\" + name
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def SdkPath = properties.getProperty('sdk.dir')
+//    def SdkPath = "C:\\Users\\xbyl\\AppData\\Local\\Android\\Sdk"
+//                def SdkPath = "C:\\Users\\Administrator\\AppData\\Local\\Android\\Sdk"
+    def d8Path = SdkPath + "\\build-tools\\34.0.0\\d8.bat"
+    def libPath = SdkPath + "\\platforms\\android-33\\android.jar"
+    def outputFilePath = projectPath + "\\out\\" + name + ".zip"
+    def jarPath = ""
+    switch (isDebug()) {
+        case -1:
+            return
+        case 1:
+            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\debug\\classes.jar"
+            break
+        case 0:
+            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\release\\classes.jar"
+            break
+    }
+
+    def cmd = d8Path + " --min-api 25 --release " + jarPath + " --output=" + outputFilePath + " --lib " + libPath
+    def classPath = projectPath + "\\libs"
+    if (new File(classPath).exists()) {
+        cmd += " --classpath " + classPath + "\\*.jar"
+    }
+
+    println("cmd: " + cmd)
+    runCommand('cmd', "/c", cmd)
+
+    new File(projectPath + "\\out").mkdirs()
+    decompressDir(outputFilePath, projectPath + "\\out\\")
+    copy {
+        from projectPath + "\\out\\classes.dex"
+        into projectPath + "\\..\\app\\src\\main\\assets"
+        rename { String filename ->
+            return name + ".dex"
+        }
+    }
+}
+
+class BuildAllDex extends BuildAdapter {
+    Object gradle;
+
+    BuildAllDex(Object project) {
+        gradle = project
+    }
+
+    void buildFinished(BuildResult result) {
+        gradle.buildDex("android_helper")
+        gradle.buildDex("frida_helper")
+    }
+}
+
+gradle.addListener(new BuildAllDex(this))
+
+ext {
+    decompressDir = this.&decompressDir
+    runCommand = this.&runCommand
+}

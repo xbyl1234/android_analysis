@@ -1,0 +1,28 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.andriod.frida_helper'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 27
+    }
+
+    buildTypes {
+        release {
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    compileOnly 'com.alibaba.fastjson2:fastjson2:2.0.40'
+    compileOnly 'com.google.code.gson:gson:2.10.1'
+}

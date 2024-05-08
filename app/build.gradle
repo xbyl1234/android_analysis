@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.andriod.analyse'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.andriod.analyse"
+        minSdk 27
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        ndk {
+//            abiFilters "armeabi-v7a"
+            abiFilters "arm64-v8a"
+//            abiFilters "x86_64"
+        }
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++20'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    compileOnly 'de.robv.android.xposed:api:53:sources'
+    compileOnly 'de.robv.android.xposed:api:53'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.alibaba.fastjson2:fastjson2:2.0.47'
+    implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
+    implementation 'com.google.gms:google-services:4.4.1'
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+    implementation project(path: ':android_helper')
+    implementation project(path: ':frida_helper')
+}
