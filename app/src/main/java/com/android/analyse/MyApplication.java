@@ -1,4 +1,4 @@
-package com.andriod.analyse;
+package com.android.analyse;
 
 import android.app.Application;
 

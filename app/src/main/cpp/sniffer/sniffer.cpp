@@ -1,5 +1,6 @@
-#include "../third//utils/log.h"
-#include "../third//tinyxml2/tinyxml2.h"
+#include "../third/utils/log.h"
+#include "../third/utils/linux_helper.h"
+#include "../third/tinyxml2/tinyxml2.h"
 
 using namespace tinyxml2;
 
@@ -21,28 +22,22 @@ void system_call(const string &cmd) {
 }
 
 int main(int argc, char **args) {
+    init_log("sniffer", new xbyl::adapter_printf());
     logi("%s", "start sniffer...");
     if (argc != 3) {
         loge("%s", "args error!");
         return 0;
     }
-    XMLDocument doc;
-    doc.LoadFile("/data/system/packages.xml");
-    if (doc.Error()) {
-        loge("read packages.xml error: %s", doc.ErrorStr());
-        return 0;
-    }
     string package_name = args[1];
     string file_name = args[2];
     string userid;
-    auto packages = doc.FirstChildElement("packages");
-    XMLElement *package = packages->FirstChildElement("package");
-    while (package) {
-        if (package_name == package->Attribute("name")) {
-            userid = package->Attribute("userId");
-        }
-        package = package->NextSiblingElement("package");
+    string result = RunCmd("cmd package list packages -U |grep " + package_name);
+    if (result.find("uid:") == -1) {
+        loge("not find pkg!");
+        return 0;
     }
+    userid = replace_all(result.substr(result.find("uid:") + 4), "\n", "");
+    userid = replace_all(userid, "\r", "");
     if (userid.empty()) {
         loge("%s", "cant finde userid!");
         return 0;

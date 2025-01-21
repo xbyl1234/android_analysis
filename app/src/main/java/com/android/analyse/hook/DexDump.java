@@ -1,11 +1,10 @@
-package com.andriod.analyse.hook;
+package com.android.analyse.hook;
 
 
 import com.common.tools.hooker.HookTools;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class DexDump {

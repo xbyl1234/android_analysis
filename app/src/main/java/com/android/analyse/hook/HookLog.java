@@ -1,11 +1,11 @@
-package com.andriod.analyse.hook;
+package com.android.analyse.hook;
 
 import android.app.Application;
 import android.content.Context;
 
 import com.common.log;
+import com.common.tools.hooker.HookTools;
 import com.common.utils;
-import com.frida.Reflect;
 import com.frida.frida_helper;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +54,7 @@ public class HookLog {
                 super.beforeHookedMethod(param);
                 log.i("put " + param.args[0] + "  " + param.args[1]);
 
-                Object b = Reflect.GetFieldValue(XposedHelpers.findClass("z32.b", classLoader), null, "b");
+                Object b = HookTools.GetFieldValue(XposedHelpers.findClass("z32.b", classLoader), null, "b");
                 log.i("b: " + frida_helper.object_2_string(b));
                 if (count < 10) {
                     utils.save_file("/data/data/com.qiyi.video/json",

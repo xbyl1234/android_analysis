@@ -8,7 +8,5 @@
 #include "dump_so.h"
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    string pkgName = get_app_pkg_name();
-    LOGI("analyse inject pid: %d, %s", getpid(), pkgName.c_str());
     return JNI_VERSION_1_6;
 }

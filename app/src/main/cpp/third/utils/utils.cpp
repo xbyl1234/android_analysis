@@ -17,6 +17,15 @@
 
 using std::stringstream;
 
+string get_packet_name() {
+    string cmdLine = GetCmdLine(getpid());
+    int p = cmdLine.find(":");
+    if (p >= 0) {
+        return cmdLine.substr(0, p);
+    }
+    return cmdLine;
+}
+
 string mid_string(const string &src, const string &start, const string &end) {
     int p = src.find(start);
     if (p == -1) {
@@ -314,14 +323,16 @@ string ReadFile(const string &path) {
 
 void StringAppendV(std::string *dst, const char *format, va_list ap) {
     // First try with a small fixed size buffer
-    char space[1024];
-
+    char *space = new char[1024]{};
+    defer([&]() {
+        delete[]space;
+    });
     // It's possible for methods that use a va_list to invalidate
     // the data in it upon use.  The fix is to make a copy
     // of the structure before using it and use that copy instead.
     va_list backup_ap;
     va_copy(backup_ap, ap);
-    int result = vsnprintf(space, sizeof(space), format, backup_ap);
+    int result = vsnprintf(space, 1024, format, backup_ap);
     va_end(backup_ap);
 
     if (result < static_cast<int>(sizeof(space))) {
@@ -519,21 +530,4 @@ vector<Stack> GetStackInfo(int num, ...) {
     }
     va_end(args);
     return frame;
-}
-
-string get_app_pkg_name() {
-    auto cmdlines = string_split(GetCmdLine(getpid()), ":");
-    if (cmdlines.empty()) {
-        return "";
-    }
-    return cmdlines[0];
-}
-
-
-string get_app_data_path() {
-    string pkgName = get_app_pkg_name();
-    if (pkgName.empty()) {
-        return "";
-    }
-    return "/data/data/" + pkgName;
 }

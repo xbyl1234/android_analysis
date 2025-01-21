@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.andriod.frida_helper'
+    namespace 'com.android.frida_helper'
     compileSdk 34
 
     defaultConfig {

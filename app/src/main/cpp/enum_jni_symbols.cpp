@@ -18,6 +18,6 @@ void enum_jni_symbols() {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_andriod_analyse_hook_Native_nativeEnumSymbols(JNIEnv *env, jclass clazz) {
+Java_com_android_analyse_hook_Native_nativeEnumSymbols(JNIEnv *env, jclass clazz) {
     enum_jni_symbols();
 }

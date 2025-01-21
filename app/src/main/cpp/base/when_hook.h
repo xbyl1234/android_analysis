@@ -8,3 +8,4 @@ using WhenHookCallBack = std::function<void(const string &path, void *addr,
 
 bool WhenSoInitHook(const std::string &soName, WhenHookCallBack _callBack);
 
+void WhenSoLoaded(const string &libName, WhenHookCallBack _callBack);

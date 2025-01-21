@@ -1,4 +1,4 @@
-package com.andriod.analyse.hook;
+package com.android.analyse.hook;
 
 
 import android.app.Application;
@@ -24,7 +24,7 @@ public class AnalyseHook implements IXposedHookLoadPackage {
             log.i("make extern dir error: " + e);
         }
         FridaHelperLoader.InjectFridaHelp(lpparam.classLoader);
-        Native.LoadAnalyseSo();
+        Native.LoadAnalyseSo(lpparam.packageName);
         WhenHook.WhenPerformLaunchActivityHook(new WhenHook.WhenHookCallback() {
             @Override
             public void OnHook(Application application, ClassLoader classLoader) {

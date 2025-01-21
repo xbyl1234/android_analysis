@@ -1,4 +1,4 @@
-package com.andriod.analyse.hook;
+package com.android.analyse.hook;
 
 import com.common.log;
 
@@ -9,7 +9,7 @@ public class FridaHelperLoader {
     static public Class GsonJson;
     static public Class FridaHelper;
 
-    static boolean InjectFridaHelp(ClassLoader classLoader) {
+    public static boolean InjectFridaHelp(ClassLoader classLoader) {
         if (hasInjectFridaHelper) {
             return hasInjectFridaHelper;
         }

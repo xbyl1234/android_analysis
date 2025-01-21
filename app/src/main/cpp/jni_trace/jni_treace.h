@@ -4,6 +4,7 @@
 #include <set>
 #include <jni.h>
 #include <dlfcn.h>
+#include <functional>
 
 #include "../third/byopen/hack_dlopen.h"
 #include "../third/utils/utils.h"
@@ -11,27 +12,28 @@
 #include "../base/hook.h"
 
 #include "jni_helper.h"
+#include "jni_sym.h"
 
 using namespace std;
 
+using CheckTargetModuleFunc = function<int(const vector<Stack> &frame)>;
 
 class JniTrace {
 public:
     explicit JniTrace() {}
 
     bool
-    Init(jclass frida_helper, fake_dlctx_ref_t handleLibArt, const vector<string> &targetModule,
-         const vector<string> &passJavaMethod) {
-        if (!resolve(handleLibArt, &jniHooks)) {
-            loge("SymbolInfo::resolve error!");
+    Init(jclass frida_helper, fake_dlctx_ref_t handleLibArt,
+         CheckTargetModuleFunc checkTargetModuleFunc, const vector<string> &passJavaMethod) {
+        JNIEnv *env = jniHelper.GetEnv();
+        if (!this->sym.init(handleLibArt, env)) {
             return false;
         }
-        this->targetModule = targetModule;
+        this->checkTargetModuleFunc = checkTargetModuleFunc;
         for (const auto &item: passJavaMethod) {
             this->passJavaMethod.insert(item);
         }
         this->frida_helper = frida_helper;
-        JNIEnv *env = jniHelper.GetEnv();
         object_2_string = env->GetStaticMethodID(frida_helper, "object_2_string",
                                                  "(Ljava/lang/Object;)Ljava/lang/String;");
         init = true;
@@ -39,7 +41,7 @@ public:
     }
 
     bool Hook() {
-        return hookAll(&jniHooks);
+        return hookAll(&sym.jniHooks);
     }
 
     bool CheckPassJavaMethod(jmethodID method) {
@@ -54,32 +56,20 @@ public:
         return ret;
     }
 
-    bool CheckTargetModule(const vector<Stack> &frame) {
-        bool find = false;
-        for (const auto &item: frame) {
-            for (const auto &target: targetModule) {
-                if (item.name.find(target) != -1) {
-                    find = true;
-                    break;
-                }
-            }
-            if (find) {
-                break;
-            }
-        }
-        return find;
+    int CheckTargetModule(const vector<Stack> &frame) {
+        return checkTargetModuleFunc(frame);
     }
 
 public:
     bool init = false;
     jclass frida_helper;
     jmethodID object_2_string;
-    vector<string> targetModule;
+    CheckTargetModuleFunc checkTargetModuleFunc;
     set<string> passJavaMethod;
     set<jmethodID> passJavaMethodId;
-    static vector<SymbolInfo> jniHooks;
+    jni_sym sym;
 };
 
 extern JniTrace jniTrace;
-extern __thread int callDeep;
+extern __thread bool passJniTrace;
 extern __thread bool passCallMethod;

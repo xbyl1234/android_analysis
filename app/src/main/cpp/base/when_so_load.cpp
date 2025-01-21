@@ -26,7 +26,7 @@ do_linker_log(int priority, const char *format, va_list args) {
     if (strstr(format, "c-tor") && !strstr(format, "Done")) {
         va_list cp_va;
         va_copy(cp_va, args);
-//        LOGI("%s", format_string(format, cp_va).c_str());
+        LOGI("do_linker_log1 - %s", format_string(format, cp_va).c_str());
         char *type = va_arg(args, char*);
         void *addr = va_arg(args, void*);
         char *path = va_arg(args, char*);
@@ -35,11 +35,11 @@ do_linker_log(int priority, const char *format, va_list args) {
         }
         if (strstr(path, targetLibName.c_str())) {
             hadCall = true;
-            logi("WhenSoInitHook on %s init", targetLibName.c_str());
+//            logi("WhenSoInitHook on %s init", targetLibName.c_str());
             callBack(path, addr, type);
         }
     } else {
-//        LOGI("%s", format_string(format, args).c_str());
+//        LOGI("do_linker_log2 - %s", format_string(format, args).c_str());
     }
     return 0;
 }
@@ -125,7 +125,6 @@ bool HookConstructor() {
 //    }
 //    return hookInfo_dlopen(filename, flag);
 //}
-//void* android_dlopen_ext(const char* filename, int flag, const android_dlextinfo* extinfo)
 
 bool WhenSoInitHook(const string &libName, WhenHookCallBack _callBack) {
     if (hadHook) {
@@ -140,10 +139,5 @@ bool WhenSoInitHook(const string &libName, WhenHookCallBack _callBack) {
     return true;
 }
 
-void TestWhenHook() {
-    WhenSoInitHook("libtest.so", [](const string &path, void *addr, const string &funcType) {
-        LOGI("call %p, func: %s, path: %s", addr, funcType.c_str(), path.c_str());
-    });
-}
 
 

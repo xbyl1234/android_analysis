@@ -1,5 +1,6 @@
-package com.andriod.analyse.hook;
+package com.android.analyse.hook;
 
+import android.util.Log;
 import com.common.log;
 
 public class AppFileWriter {
@@ -10,6 +11,7 @@ public class AppFileWriter {
     }
 
     public void write(String data) {
+        Log.i("analyse_log", "len: " + data.length() + ", " + data);
         log.i(data);
         Native.nativeWrite(handle, data);
     }

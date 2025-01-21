@@ -1,17 +1,8 @@
-package com.andriod.analyse;
+package com.android.analyse;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-
-import com.andriod.analyse.hook.Native;
-import com.android_helper.Main;
-import com.common.log;
-import com.frida.frida_helper;
-
-import java.util.HashMap;
-
-import com.common.utils;
 
 public class MainActivity extends AppCompatActivity {
     @Override

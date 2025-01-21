@@ -143,10 +143,6 @@ TraversePackagesList(std::function<bool(const vector<string> &)> callback);
 
 bool check_memory_readable(void *addr);
 
-string get_app_pkg_name();
-
-string get_app_data_path();
-
 void gen_hex(int len, char *result);
 
 struct Stack {
@@ -155,3 +151,5 @@ struct Stack {
 };
 
 vector<Stack> GetStackInfo(int num, ...);
+
+string get_packet_name();

@@ -5,7 +5,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../../libs/${
 find_library(log-lib log)
 
 add_subdirectory(./base)
-add_subdirectory(./log2file)
+add_subdirectory(./global)
+add_subdirectory(third/log2file)
 add_subdirectory(./third)
 include_directories(./third/libunwind/include)
 
@@ -37,12 +38,14 @@ target_link_libraries(
         libjson
         libbase64
         unwindstack
+        global
         log2file
         ${log-lib}
 )
 
 file(GLOB test_src
-        "test.cpp"
+        "test/*.cpp"
+        "test/*.h"
         )
 
 

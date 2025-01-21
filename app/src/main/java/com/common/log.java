@@ -76,7 +76,7 @@ public class log {
     }
 
     public static void d(String msg) {
-        Log(LogLevel.Debug, msg, true);
+        Log(LogLevel.Info, msg, true);
     }
 
     public static void i(String msg) {

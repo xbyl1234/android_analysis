@@ -1,7 +1,7 @@
 #include "third/utils/log.h"
 #include "third/utils/utils.h"
 #include "base/hook.h"
-#include "log2file/app_file_writer.h"
+#include "third/log2file/app_file_writer.h"
 
 char *targetLibBase = nullptr;
 

@@ -13,15 +13,15 @@ using std::vector;
 
 using FormatFunc = string (*)(JNIEnv *env, uint64_t obj, string args_type);
 
-#define GET_FORMAT_FUNC(type)               format_java_##type
-#define DECLARE_PRINTF_FUNC(type)           string format_java_##type(JNIEnv *env, uint64_t obj,string args_type)
+#define GET_Java_Format_Fuc(type)               format_java_##type
+#define DECLARE_Java_Format_Func(type)           string format_java_##type(JNIEnv *env, uint64_t obj,string args_type)
 
 
-DECLARE_PRINTF_FUNC(void) {
+DECLARE_Java_Format_Func(void) {
     return "void";
 }
 
-DECLARE_PRINTF_FUNC(bool) {
+DECLARE_Java_Format_Func(bool) {
     if (obj) {
         return "true";
     } else {
@@ -29,49 +29,49 @@ DECLARE_PRINTF_FUNC(bool) {
     }
 }
 
-DECLARE_PRINTF_FUNC(byte) {
+DECLARE_Java_Format_Func(byte) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(char) {
+DECLARE_Java_Format_Func(char) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(short) {
+DECLARE_Java_Format_Func(short) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(int) {
+DECLARE_Java_Format_Func(int) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(long) {
+DECLARE_Java_Format_Func(long) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(float) {
+DECLARE_Java_Format_Func(float) {
     char buf[254];
     sprintf(buf, "%d", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(double) {
+DECLARE_Java_Format_Func(double) {
     char buf[254];
     sprintf(buf, "%lf", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(java_lang_String) {
+DECLARE_Java_Format_Func(java_lang_String) {
     if (obj == 0) {
         return "null";
     }
@@ -114,7 +114,7 @@ DECLARE_PRINTF_FUNC(java_lang_String) {
 //    return ret;
 //}
 
-DECLARE_PRINTF_FUNC(in_jni_gson_parse) {
+DECLARE_Java_Format_Func(in_jni_gson_parse) {
     if (obj == 0) {
         return "null";
     }
@@ -149,7 +149,7 @@ DECLARE_PRINTF_FUNC(in_jni_gson_parse) {
 }
 
 //#ifdef USE_IN_JAVA_PARSE
-DECLARE_PRINTF_FUNC(in_java_parse) {
+DECLARE_Java_Format_Func(in_java_parse) {
 #if not defined(USE_IN_JAVA_PARSE)
     return GET_FORMAT_FUNC(in_jni_gson_parse)(env, obj, args_type);
 #endif
@@ -160,7 +160,7 @@ DECLARE_PRINTF_FUNC(in_java_parse) {
     jclass native_hook_helper = env->FindClass("com/plug/export/frida_helper");
     if (clean_exception(env)) {
 //        return "not find frida_helper";
-        return GET_FORMAT_FUNC(in_jni_gson_parse)(env, obj, args_type);
+        return GET_Java_Format_Fuc(in_jni_gson_parse)(env, obj, args_type);
     }
 
     jmethodID format_args = env->GetStaticMethodID(native_hook_helper, "object_2_string",
@@ -179,43 +179,43 @@ DECLARE_PRINTF_FUNC(in_java_parse) {
 }
 
 
-DECLARE_PRINTF_FUNC(jclass) {
+DECLARE_Java_Format_Func(jclass) {
     char buf[254];
     sprintf(buf, "%p", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(jweak) {
+DECLARE_Java_Format_Func(jweak) {
     char buf[254];
     sprintf(buf, "cant format jweak:%p", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(jfieldID) {
+DECLARE_Java_Format_Func(jfieldID) {
     char buf[254];
     sprintf(buf, "%p", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(jmethodID) {
+DECLARE_Java_Format_Func(jmethodID) {
     char buf[254];
     sprintf(buf, "%p", obj);
     return buf;
 }
 
-DECLARE_PRINTF_FUNC(char_4) {
+DECLARE_Java_Format_Func(char_4) {
     if (obj == 0) {
         return "char* is null pointer";
     }
     return (char *) obj;
 }
 
-DECLARE_PRINTF_FUNC(jthrowable) {
+DECLARE_Java_Format_Func(jthrowable) {
     if (obj == 0) {
         return "no exception";
     } else {
         env->ExceptionClear();
-        return GET_FORMAT_FUNC(in_java_parse)(env, obj, "Exception");
+        return GET_Java_Format_Fuc(in_java_parse)(env, obj, "Exception");
     }
 }
 
@@ -233,48 +233,48 @@ struct FormatBean {
 
 
 map<string, format_info_t> formatFuncMap = {
-        {"V",                  {GET_FORMAT_FUNC(void),             0,                 false}},
-        {"Z",                  {GET_FORMAT_FUNC(bool),             sizeof(jint),      false}},
-        {"B",                  {GET_FORMAT_FUNC(byte),             sizeof(jint),      false}},
-        {"C",                  {GET_FORMAT_FUNC(char),             sizeof(jint),      false}},
-        {"S",                  {GET_FORMAT_FUNC(short),            sizeof(jint),      false}},
-        {"I",                  {GET_FORMAT_FUNC(int),              sizeof(jint),      false}},
-        {"J",                  {GET_FORMAT_FUNC(long),             sizeof(jlong),     false}},
-        {"F",                  {GET_FORMAT_FUNC(float),            sizeof(jdouble),   false}},
-        {"D",                  {GET_FORMAT_FUNC(double),           sizeof(jdouble),   false}},
-        {"void",               {GET_FORMAT_FUNC(void),             0,                 false}},
-        {"jboolean",           {GET_FORMAT_FUNC(bool),             sizeof(jint),      false}},
-        {"jbyte",              {GET_FORMAT_FUNC(byte),             sizeof(jint),      false}},
-        {"jchar",              {GET_FORMAT_FUNC(char),             sizeof(jint),      false}},
-        {"jshort",             {GET_FORMAT_FUNC(short),            sizeof(jint),      false}},
-        {"jint",               {GET_FORMAT_FUNC(int),              sizeof(jint),      false}},
-        {"jlong",              {GET_FORMAT_FUNC(long),             sizeof(jlong),     false}},
-        {"jfloat",             {GET_FORMAT_FUNC(float),            sizeof(jdouble),   false}},
-        {"jdouble",            {GET_FORMAT_FUNC(double),           sizeof(jdouble),   false}},
-        {"jsize",              {GET_FORMAT_FUNC(int),              sizeof(jint),      false}},
-        {"jstring",            {GET_FORMAT_FUNC(java_lang_String), sizeof(jobject),   true}},
-        {"Ljava/lang/String;", {GET_FORMAT_FUNC(java_lang_String), sizeof(jobject),   true}},
-        {"jarray",             {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jobjectArray",       {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jbooleanArray",      {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jbyteArray",         {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jcharArray",         {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jshortArray",        {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jintArray",          {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jlongArray",         {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jfloatArray",        {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jdoubleArray",       {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jobject",            {GET_FORMAT_FUNC(in_java_parse),    sizeof(jobject),   true}},
-        {"jthrowable",         {GET_FORMAT_FUNC(jthrowable),       sizeof(jobject),   true}},
-        {"jvalue",             {GET_FORMAT_FUNC(in_java_parse),    sizeof(jvalue),    true}},
-        {"jclass",             {GET_FORMAT_FUNC(jclass),           sizeof(jclass),    true}},
-        {"jweak",              {GET_FORMAT_FUNC(jweak),            sizeof(jweak),     true}},
-        {"jfieldID",           {GET_FORMAT_FUNC(jfieldID),         sizeof(jfieldID),  true}},
-        {"jmethodID",          {GET_FORMAT_FUNC(jmethodID),        sizeof(jmethodID), true}},
-        {"jobjectRefType",     {GET_FORMAT_FUNC(int),              sizeof(jint),      false}},
-        {"char*",              {GET_FORMAT_FUNC(char_4),           sizeof(char *),    false}},
-        {"size_t",             {GET_FORMAT_FUNC(long),             sizeof(size_t),    false}},
-        {"int",                {GET_FORMAT_FUNC(int),              sizeof(jint),      false}}
+        {"V",                  {GET_Java_Format_Fuc(void),             0,                 false}},
+        {"Z",                  {GET_Java_Format_Fuc(bool),             sizeof(jint),      false}},
+        {"B",                  {GET_Java_Format_Fuc(byte),             sizeof(jint),      false}},
+        {"C",                  {GET_Java_Format_Fuc(char),             sizeof(jint),      false}},
+        {"S",                  {GET_Java_Format_Fuc(short),            sizeof(jint),      false}},
+        {"I",                  {GET_Java_Format_Fuc(int),              sizeof(jint),      false}},
+        {"J",                  {GET_Java_Format_Fuc(long),             sizeof(jlong),     false}},
+        {"F",                  {GET_Java_Format_Fuc(float),            sizeof(jdouble),   false}},
+        {"D",                  {GET_Java_Format_Fuc(double),           sizeof(jdouble),   false}},
+        {"void",               {GET_Java_Format_Fuc(void),             0,                 false}},
+        {"jboolean",           {GET_Java_Format_Fuc(bool),             sizeof(jint),      false}},
+        {"jbyte",              {GET_Java_Format_Fuc(byte),             sizeof(jint),      false}},
+        {"jchar",              {GET_Java_Format_Fuc(char),             sizeof(jint),      false}},
+        {"jshort",             {GET_Java_Format_Fuc(short),            sizeof(jint),      false}},
+        {"jint",               {GET_Java_Format_Fuc(int),              sizeof(jint),      false}},
+        {"jlong",              {GET_Java_Format_Fuc(long),             sizeof(jlong),     false}},
+        {"jfloat",             {GET_Java_Format_Fuc(float),            sizeof(jdouble),   false}},
+        {"jdouble",            {GET_Java_Format_Fuc(double),           sizeof(jdouble),   false}},
+        {"jsize",              {GET_Java_Format_Fuc(int),              sizeof(jint),      false}},
+        {"jstring",            {GET_Java_Format_Fuc(java_lang_String), sizeof(jobject),   true}},
+        {"Ljava/lang/String;", {GET_Java_Format_Fuc(java_lang_String), sizeof(jobject),   true}},
+        {"jarray",             {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jobjectArray",       {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jbooleanArray",      {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jbyteArray",         {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jcharArray",         {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jshortArray",        {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jintArray",          {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jlongArray",         {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jfloatArray",        {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jdoubleArray",       {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jobject",            {GET_Java_Format_Fuc(in_java_parse),    sizeof(jobject),   true}},
+        {"jthrowable",         {GET_Java_Format_Fuc(jthrowable),       sizeof(jobject),   true}},
+        {"jvalue",             {GET_Java_Format_Fuc(in_java_parse),    sizeof(jvalue),    true}},
+        {"jclass",             {GET_Java_Format_Fuc(jclass),           sizeof(jclass),    true}},
+        {"jweak",              {GET_Java_Format_Fuc(jweak),            sizeof(jweak),     true}},
+        {"jfieldID",           {GET_Java_Format_Fuc(jfieldID),         sizeof(jfieldID),  true}},
+        {"jmethodID",          {GET_Java_Format_Fuc(jmethodID),        sizeof(jmethodID), true}},
+        {"jobjectRefType",     {GET_Java_Format_Fuc(int),              sizeof(jint),      false}},
+        {"char*",              {GET_Java_Format_Fuc(char_4),           sizeof(char *),    false}},
+        {"size_t",             {GET_Java_Format_Fuc(long),             sizeof(size_t),    false}},
+        {"int",                {GET_Java_Format_Fuc(int),              sizeof(jint),      false}}
 //        ,
 //        {"void*",          {GET_FORMAT_FUNC(void_4),           sizeof(void *)}}
 };
@@ -311,7 +311,7 @@ string format_args(JNIEnv *env, const string &args_type, uint64_t obj) {
 
         if (cpy_sig[0] == '[' || cpy_sig[0] == 'L') {
 //            loge("format_args in java: args type %s", args_type.c_str());
-            return GET_FORMAT_FUNC(in_java_parse)(env, obj, args_type);
+            return GET_Java_Format_Fuc(in_java_parse)(env, obj, args_type);
         }
     } else {
         if (item != formatFuncMap.end() && !item->second.need_jnienv) {

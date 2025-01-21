@@ -11,7 +11,7 @@
 #include "third/dobby/include/dobby.h"
 #include "base/when_hook.h"
 #include "base/hook.h"
-
+#include "global/global.h"
 using namespace std;
 
 void *get_start(const vector<MapsInfo> &maps, const string &name) {
@@ -106,7 +106,7 @@ bool dump_so_when_register_natives() {
 bool dump_so_when_init(const string &targetLibName) {
     return WhenSoInitHook(targetLibName,
                           [=](const string &path, void *addr, const string &funcType) {
-                              dump_so(targetLibName, "/data/data/" + get_app_pkg_name());
+                              dump_so(targetLibName, "/data/data/" + getPkgName());
                           });
 }
 
@@ -116,7 +116,7 @@ bool dump_so_delay(const string &targetLibName, int sleepTime) {
                               auto *thd = new thread([&]() {
                                   sleep(sleepTime);
                                   dump_so(targetLibName,
-                                          "/data/data/" + get_app_pkg_name());
+                                          "/data/data/" + getPkgName());
                               });
                           });
 }
@@ -126,7 +126,7 @@ static string gDumpSoName;
 
 DefineHookStub(JNI_OnLoad, jint, JavaVM *vm, void *reserved) {
     auto ret = pHook_JNI_OnLoad(vm, reserved);
-    dump_so(gDumpSoName, "/data/data/" + get_app_pkg_name());
+    dump_so(gDumpSoName, "/data/data/" + getPkgName());
     return ret;
 }
 

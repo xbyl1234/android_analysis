@@ -27,7 +27,7 @@ public class frida_helper {
         String ret = "";
         String json_err = "";
         try {
-            Object result = Reflect.ReflectGetFields(obj.getClass(), obj, true, false);
+            Object result = Reflect2Json.Object2Json(obj);
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(byte[].class, new ByteArraySerializer())
                     .serializeSpecialFloatingPointValues()

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.andriod.analyse'
+    namespace 'com.android.analyse'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.andriod.analyse"
+        applicationId "com.android.analyse"
         minSdk 27
         targetSdk 34
         versionCode 1
@@ -23,10 +23,15 @@ android {
             }
         }
     }
-
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
@@ -54,6 +59,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
     implementation 'com.google.gms:google-services:4.4.1'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation project(path: ':android_helper')
     implementation project(path: ':frida_helper')
 }

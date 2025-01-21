@@ -45,14 +45,14 @@ _HookLogWitchLibWithStack(const string &libName, const string &funcName, void *r
 #endif
 }
 
-bool _resolve(SymbolInfo &item, const char *symbol, void *addr) {
-    if (item.isReg && !regex_search(symbol, regex(item.sym))) {
+bool _resolve(SymbolInfo *item, const char *symbol, void *addr) {
+    if (item->isReg && !regex_search(symbol, regex(item->sym))) {
         return false;
     }
-    if (item.sym != symbol) {
+    if (item->sym != symbol) {
         return false;
     }
-    item.target = addr;
+    item->target = addr;
     return true;
 }
 
@@ -61,9 +61,9 @@ bool _resolve(SymbolInfo &item, const char *symbol, void *addr) {
 //    hack_dlsym(targetHandle, this->targetSymbol.c_str());
 //}
 
-bool resolve(fake_dlctx_ref_t handle, vector<SymbolInfo> *symbols) {
+bool resolve(fake_dlctx_ref_t handle, vector<SymbolInfo*> *symbols) {
     struct Ctx {
-        vector<SymbolInfo> *symbols;
+        vector<SymbolInfo*> *symbols;
         int count = 0;
     } ctx;
     ctx.symbols = symbols;
@@ -73,7 +73,7 @@ bool resolve(fake_dlctx_ref_t handle, vector<SymbolInfo> *symbols) {
                 Ctx *c = (Ctx *) ctx;
                 for (auto &item: *c->symbols) {
                     if (_resolve(item, symbol, addr)) {
-                        logi("resolved %s", item.sym.c_str());
+                        logi("resolved %s", item->sym.c_str());
                         c->count++;
                         break;
                     }

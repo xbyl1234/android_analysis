@@ -4,8 +4,8 @@
 #include <string>
 #include <unistd.h>
 
-#include "../third/utils/jni_helper.hpp"
-#include "../third/utils/log.h"
+#include "../utils/jni_helper.hpp"
+#include "../utils/log.h"
 
 using namespace std;
 
@@ -22,6 +22,9 @@ public:
     app_file_writer() = default;
 
     ~app_file_writer() {
+        if (file == nullptr) {
+            return;
+        }
         if (file->is_open()) {
             file->close();
         }
@@ -83,10 +86,10 @@ public:
     static fstream *open_file(const string &appDataPath, const string &name) {
         srandom(::time(nullptr) + getpid());
         auto file = new fstream();
-        file->open(format_string(appDataPath + "/%s_%d_%d", name.c_str(), getpid(), random()),
-                   ios::out | ios::binary);
+        string path = format_string(appDataPath + "/%s_%d_%d", name.c_str(), getpid(), random());
+        file->open(path, ios::out | ios::binary);
         if (!file->is_open()) {
-            LOGI("analyse open log file error: %d", errno);
+            LOGI("analyse open log file %s error: %d", path.c_str(), errno);
             return file;
         }
         return file;

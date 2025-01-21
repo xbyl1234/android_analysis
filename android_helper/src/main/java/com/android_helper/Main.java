@@ -79,10 +79,14 @@ public class Main {
         for (String item : args) {
             System.out.println("args: " + item);
         }
-        if (install(args[0])) {
+        String cmd = args[0];
+        if (cmd.equals("ad")) {
+        } else if (cmd.equals("install")) {
+            if (install(args[1])) {
             System.out.println("install success");
         } else {
             System.out.println("install failed");
+            }
         }
     }
 }
