@@ -31,12 +31,12 @@ _HookLogWitchLibWithStack(const string &libName, const string &funcName, void *r
         }
     }
 
-    logPerf += format_string("func %s, ret: %p: ",
+    logPerf += xbyl::format_string("func %s, ret: %p: ",
                              funcName.c_str(),
                              ((char *) ret) - retOffsetBase);
     va_list ap;
     va_start(ap, fmt);
-    string log = logPerf + format_string(fmt, ap);
+    string log = logPerf + xbyl::format_string(fmt, ap);
 
 #ifdef HOOKLOG2FILE
     log2file(log);
@@ -102,7 +102,7 @@ bool hookAll(vector<SymbolInfo> *symbols) {
 string stack2str(const vector<Stack> &stack) {
     string result;
     for (const Stack &item: stack) {
-        result += format_string("%s:%p", item.name.c_str(), item.offset);
+        result += xbyl::format_string("%s:%p", item.name.c_str(), item.offset);
     }
     return result;
 }

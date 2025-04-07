@@ -20,19 +20,19 @@ namespace format {
 
     DECLARE_Java_Format_Func(bool) { return obj.z ? "true" : "false"; }
 
-    DECLARE_Java_Format_Func(byte) { return format_string("%d", obj.i); }
+    DECLARE_Java_Format_Func(byte) { return xbyl::format_string("%d", obj.i); }
 
-    DECLARE_Java_Format_Func(char) { return format_string("%d", obj.i); }
+    DECLARE_Java_Format_Func(char) { return xbyl::format_string("%d", obj.i); }
 
-    DECLARE_Java_Format_Func(short) { return format_string("%d", obj.s); }
+    DECLARE_Java_Format_Func(short) { return xbyl::format_string("%d", obj.s); }
 
-    DECLARE_Java_Format_Func(int) { return format_string("%d", obj.i); }
+    DECLARE_Java_Format_Func(int) { return xbyl::format_string("%d", obj.i); }
 
-    DECLARE_Java_Format_Func(long) { return format_string("%ld", obj.j); }
+    DECLARE_Java_Format_Func(long) { return xbyl::format_string("%ld", obj.j); }
 
-    DECLARE_Java_Format_Func(float) { return format_string("%f", obj.f); }
+    DECLARE_Java_Format_Func(float) { return xbyl::format_string("%f", obj.f); }
 
-    DECLARE_Java_Format_Func(double) { return format_string("%lf", obj.d); }
+    DECLARE_Java_Format_Func(double) { return xbyl::format_string("%lf", obj.d); }
 
     inline jvalue toJValue(void *o) {
         jvalue r;
@@ -40,11 +40,11 @@ namespace format {
         return r;
     }
 
-    inline string format_java_object_value(JNIEnv *env, void *value) {
-        return format_string("%s:%p",
-                             GET_Java_Format_Fuc(in_java_parse)(env,
-                                                                toJValue(value),
-                                                                getTypeName<decltype(value)>()).c_str());
+    string format_java_object_value(JNIEnv *env, void *value) {
+        return xbyl::format_string("%s:%p",
+                                   GET_Java_Format_Fuc(in_java_parse)(env,
+                                                                      toJValue(value),
+                                                                      getTypeName<decltype(value)>()).c_str());
     }
 
     using FormatFunc = string (*)(JNIEnv *env, const jvalue &obj, const string &args_type);
@@ -165,12 +165,10 @@ namespace format {
         return result;
     }
 
-
     vector<string>
-    SerializeJavaObjectList(JNIEnv *env, const vector<string> &argsTypes,
-                            const vector<jvalue> &args) {
+    SerializeJavaObjectList(JNIEnv *env, const vector<string> &argsTypes,const jvalue *args) {
         vector<string> result;
-        for (int i = 0; i < args.size(); ++i) {
+        for (int i = 0; i < argsTypes.size(); ++i) {
             result.push_back(format_args(env, argsTypes[i], args[i]));
         }
         return result;

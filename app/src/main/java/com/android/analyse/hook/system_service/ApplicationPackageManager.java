@@ -1,7 +1,6 @@
-package com.andriod.analyse.hook.system_service;
+package com.android.analyse.hook.system_service;
 
 import android.content.ComponentName;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
@@ -14,7 +13,6 @@ import com.common.tools.hooker.Hooker;
 import java.util.List;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 @FakeClass(ClassName = "android.app.ApplicationPackageManager")
 public class ApplicationPackageManager extends FakeClassBase {

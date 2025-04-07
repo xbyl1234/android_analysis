@@ -30,16 +30,16 @@ __thread bool passJniTrace = false;
 __thread bool passCallMethod = false;
 namespace format {
     DECLARE_Java_Format_Func(in_java_parse) {
-        logd("parse in java: %s %p ", args_type.c_str(), obj.l);
+//        logd("parse in java: %s %p ", args_type.c_str(), obj.l);
         if (obj.l == nullptr) {
             return "null";
         }
 //#ifndef Android12
 //    if (!jniTrace.jniHelper.HandleScopeContains(env->env, obj.l)) {
-//        return format_string("invalid object[%s: %p]", args_type.c_str(), obj.l);
+//        return xbyl::format_string("invalid object[%s: %p]", args_type.c_str(), obj.l);
 //    }
 //    if (env->env->IsSameObject(obj.l, nullptr)) {
-//        return format_string("deleted object[%s: %p]", args_type.c_str(), obj.l);
+//        return xbyl::format_string("deleted object[%s: %p]", args_type.c_str(), obj.l);
 //    }
 //#endif
         jobject gref = obj.l;
@@ -63,10 +63,31 @@ static int CheckAllowModule(const vector<Stack> &frame, const initializer_list<s
     for (const auto &item: frame) {
         for (int i = 0; i < strs.size(); i++) {
             if (item.name.find(*(strs.begin() + i)) != string::npos) {
-                return true;
+                return i;
             }
         }
     }
+
+    string logs = "pass: ";
+    for (const auto &item: frame) {
+        logs += item.name + ", ";
+    }
+    logi(logs.c_str());
+    return -1;
+}
+
+static int CheckFirstModule(const vector<Stack> &frame, const initializer_list<string> &strs) {
+    for (int i = 0; i < strs.size(); i++) {
+        if (frame[0].name.find(*(strs.begin() + i)) != string::npos) {
+            return i;
+        }
+    }
+
+    string logs = "pass: ";
+    for (const auto &item: frame) {
+        logs += item.name + ", ";
+    }
+    logi(logs.c_str());
     return -1;
 }
 
@@ -97,8 +118,30 @@ JNIEXPORT jboolean JNICALL init(JNIEnv *env, jclass frida_helper) {
         }
         jniTrace.Init((jclass) env->NewGlobalRef(frida_helper), handleLibArt,
                       [](const vector<Stack> &frame) -> int {
-                          return CheckAllowModule(frame, {{"libimmortal.so"},
-                                                          {"libcoordinator.so"}});
+                          return CheckFirstModule(frame, {
+                                  {"libandroid_runtime.so"},
+                                  {"libanalyse.so"},
+                                  {"libart.so"},
+                                  {"libjavacore.so"},
+                                  {"libnativeloader.so"},
+                                  {"libopenjdk.so"},
+                                  {"libopenjdkjvm.so"},
+                                  {"libjavacrypto.so"},
+                                  {"libicu_jni.so"},
+                                  {"libgui.so"},
+                                  {"libhwui.so"},
+                                  {"boot.oat"},
+                                  {"libnms.so"},
+                                  {"liballiance.so"},
+                                  {"libmonochrome_64.so"},
+                                  {"libframework-connectivity-tiramisu-jni.so"},
+                                  {"pcam.jar"},
+                                  {"libmedia_jni.so"},
+                                  {"com.google.android.gms"},
+                                  {"com.google.android.trichrome"},
+                                  {"libwebviewchromium_loader.so"},
+                                  {"libconscrypt_gmscore_jni.so"},
+                          }) == -1 ? 1 : -1;
                       },
                       passJavaMethod);
         jniTrace.Hook();

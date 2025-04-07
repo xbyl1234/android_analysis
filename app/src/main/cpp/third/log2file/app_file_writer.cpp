@@ -20,7 +20,7 @@ void log2file(const string &log) {
 void log2file(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    string result = format_string(fmt, ap);
+    string result = xbyl::format_string(fmt, ap);
     va_end(ap);
     log2file(result);
 }
@@ -45,9 +45,4 @@ Java_com_android_analyse_hook_Native_nativeWrite__JLjava_lang_String_2(JNIEnv *e
     obj->write2file(lsplant::JUTFString(env, data));
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_android_analyse_hook_Native_nativeWrite__J_3B(JNIEnv *env, jclass clazz, jlong handle,
-                                                       jbyteArray data) {
 
-}

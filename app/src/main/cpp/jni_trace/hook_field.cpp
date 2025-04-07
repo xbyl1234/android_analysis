@@ -1,47 +1,41 @@
 #include "hook.h"
 #include "art_method_name.h"
+#include "log_maker.h"
 
 void
 DealSetFieldValue(const string &tags, const string &type, const vector<Stack> &stack,
                   void(*hook)(JNIEnv *, jobject, jfieldID, jvalue v), JNIEnv *env, jobject obj,
                   jfieldID field, jvalue v) {
+    Logs logs;
+    logs.setStack(stack);
+    logs.setJniEnv(env);
+    logs.setName(tags);
+    logs.setParams("jobject", obj);
+    logs.setParams("jfieldID", field);
+    logs.setParams(type, v);
     hook(env, obj, field, v);
-    int targetIdx = jniTrace.CheckTargetModule(stack);
-    if (targetIdx == -1 || passJniTrace) {
-        return;
-    }
-    passJniTrace = true;
-    defer([] { passJniTrace = false; });
-
-    string fieldStr = jniHelper.Object2Str(env, (jobject) field);
-    string valueStr = SerializeJavaObject(env, type, v);
-    log2file("set field: %s, value: %s, ret: %s, target: %d",
-             fieldStr.c_str(), valueStr.c_str(), stack2str(stack).c_str(), targetIdx);
+    logs.log();
 }
 
 jobject
 DealGetFieldValue(const string &tags, const string &type, const vector<Stack> &stack,
                   jobject(*hook)(JNIEnv *, jobject, jfieldID), JNIEnv *env, jobject obj,
                   jfieldID field) {
+    Logs logs;
+    logs.setStack(stack);
+    logs.setJniEnv(env);
+    logs.setName(tags);
+    logs.setParams("jobject", obj);
+    logs.setParams("jfieldID", field);
     auto result = hook(env, obj, field);
-    int targetIdx = jniTrace.CheckTargetModule(stack);
-    if (targetIdx == -1 || passJniTrace) {
-        return result;
-    }
-    passJniTrace = true;
-    defer([] { passJniTrace = false; });
-
-    string fieldStr = jniHelper.Object2Str(env, (jobject) field);
-    jvalue v;
-    v.l = result;
-    string valueStr = SerializeJavaObject(env, type, v);
-    log2file("get field: %s, value: %s, ret: %s, target: %d",
-             fieldStr.c_str(), valueStr.c_str(), stack2str(stack).c_str(), targetIdx);
+    logs.setResult(type, result);
+    logs.log();
     return result;
 }
 
-#define DefineGetFieldHook(type, sigType) DefineHookStub(Get##type##Field, jobject, JNIEnv *env, jobject obj, jfieldID field) { \
-   return DealGetFieldValue("Get" #type "Field",sigType, GetStack0(), pHook_Get##type##Field, env, obj, field);\
+#define DefineGetFieldHook(type, sigType) \
+DefineHookStubCheckThreadPassJniTrace_Stack0(Get##type##Field, jobject, JNIEnv *,env, jobject, obj, jfieldID, field) { \
+   return DealGetFieldValue("Get" #type "Field",sigType, _stack, pHook_Get##type##Field, env, obj, field);\
 }
 
 DefineGetFieldHook(Object, "L")
@@ -62,9 +56,9 @@ DefineGetFieldHook(Float, "F")
 
 DefineGetFieldHook(Double, "D")
 
-
-#define DefineSetFieldHook(type, sigType) DefineHookStub(Set##type##Field, void, JNIEnv *env, jobject obj, jfieldID field, jvalue v) { \
-    DealSetFieldValue("Set" #type "Field",sigType, GetStack0(), pHook_Set##type##Field, env, obj, field,v);\
+#define DefineSetFieldHook(type, sigType) \
+DefineHookStubCheckThreadPassJniTrace_Stack0(Set##type##Field, void, JNIEnv*, env, jobject, obj, jfieldID, field, jvalue, v) { \
+    DealSetFieldValue("Set" #type "Field",sigType, _stack, pHook_Set##type##Field, env, obj, field,v);\
 }
 
 DefineSetFieldHook(Object, "L")

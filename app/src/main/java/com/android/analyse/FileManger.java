@@ -25,11 +25,11 @@ public class FileManger {
             CpyFile(context.getApplicationInfo().nativeLibraryDir, "libanalyse.so", "/data");
             String appPath = "/data/data/" + context.getApplicationInfo().packageName;
             GetAssetsFile(context, "frida_helper.dex");
-            GetAssetsFile(context, "android_helper.dex");
+//            GetAssetsFile(context, "android_helper.dex");
             GetAssetsFile(context, "sniffer");
             GetAssetsFile(context, "tcpdump");
             CpyFile(appPath, "frida_helper.dex", "/data");
-            CpyFile(appPath, "android_helper.dex", "/data");
+//            CpyFile(appPath, "android_helper.dex", "/data");
             CpyFile(appPath, "sniffer", "/data");
             CpyFile(appPath, "tcpdump", "/data");
             Toast.makeText(context, "复制成功", Toast.LENGTH_LONG).show();

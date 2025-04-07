@@ -54,10 +54,10 @@ jclass loadFridaHelperDex(JNIEnv *env) {
 
 DefineHookStub(decode_str_ai, void*, char *s, char *t) {
     auto result = pHook_decode_str_ai(s, t);
-    auto stack = GetStack1();
+    auto stack = GetStack01();
     string stackStr;
     for (const auto &item: stack) {
-        stackStr += format_string("%p,", item.offset);
+        stackStr += xbyl::format_string("%p,", item.offset);
     }
     log2file("immortal decode_str %s, %s", stackStr.c_str(), t);
     return result;
@@ -65,44 +65,54 @@ DefineHookStub(decode_str_ai, void*, char *s, char *t) {
 
 DefineHookStub(decode_str_ai2, void*, char *s, char *t) {
     auto result = pHook_decode_str_ai2(s, t);
-    auto stack = GetStack1();
+    auto stack = GetStack01();
     string stackStr;
     for (const auto &item: stack) {
-        stackStr += format_string("%p,", item.offset);
+        stackStr += xbyl::format_string("%p,", item.offset);
     }
     log2file("coordinator decode_str %s, %s", stackStr.c_str(), t);
     return result;
 }
-
-DefineHookStub(coord_check1, int64_t, void *a1, void *a2) {
-    int64_t result = pHook_coord_check1(a1, a2);
-    logi("coord check1: %d", result);
-    return 1;
+DefineHookStub(decode_str_ai3, void*, char *s, char *t) {
+    auto result = pHook_decode_str_ai3(s, t);
+    auto stack = GetStack01();
+    string stackStr;
+    for (const auto &item: stack) {
+        stackStr += xbyl::format_string("%p,", item.offset);
+    }
+    log2file("mars decode_str %s, %s", stackStr.c_str(), t);
+    return result;
 }
 
-DefineHookStub(coord_check2, int64_t, void *a1, void *a2) {
-    int64_t result = pHook_coord_check2(a1, a2);
-    logi("coord check2: %d", result);
-    return 1;
-}
-
-DefineHookStub(coord_check3, int64_t, void *a1, void *a2) {
-    int64_t result = pHook_coord_check3(a1, a2);
-    logi("coord check3: %d", result);
-    return 1;
-}
-
-DefineHookStub(immortal_check1, int64_t, void *a1, void *a2) {
-    int64_t result = pHook_immortal_check1(a1, a2);
-    logi("coord check1: %d", result);
-    return 1;
-}
-
-DefineHookStub(immortal_check2, int64_t, void *a1, void *a2) {
-    int64_t result = pHook_immortal_check2(a1, a2);
-    logi("coord check2: %d", result);
-    return 1;
-}
+//DefineHookStub(coord_check1, int64_t, void *a1, void *a2) {
+//    int64_t result = pHook_coord_check1(a1, a2);
+//    logi("coord check1: %d", result);
+//    return 1;
+//}
+//
+//DefineHookStub(coord_check2, int64_t, void *a1, void *a2) {
+//    int64_t result = pHook_coord_check2(a1, a2);
+//    logi("coord check2: %d", result);
+//    return 1;
+//}
+//
+//DefineHookStub(coord_check3, int64_t, void *a1, void *a2) {
+//    int64_t result = pHook_coord_check3(a1, a2);
+//    logi("coord check3: %d", result);
+//    return 1;
+//}
+//
+//DefineHookStub(immortal_check1, int64_t, void *a1, void *a2) {
+//    int64_t result = pHook_immortal_check1(a1, a2);
+//    logi("coord check1: %d", result);
+//    return 1;
+//}
+//
+//DefineHookStub(immortal_check2, int64_t, void *a1, void *a2) {
+//    int64_t result = pHook_immortal_check2(a1, a2);
+//    logi("coord check2: %d", result);
+//    return 1;
+//}
 
 void other() {
     WhenSoLoaded("libimmortal.so",
@@ -111,8 +121,9 @@ void other() {
                      auto base = (char *) handle->biasaddr;
                      logi("onload libimmortal");
                      InlineHookAddr(base, 0xA7B4, decode_str_ai);
-                     InlineHookAddr(base, 0xAFA0, immortal_check1);
-                     InlineHookAddr(base, 0x06B38, immortal_check2);
+//                     InlineHookAddr(base, 0xAFA0, immortal_check1);
+//                     InlineHookAddr(base, 0x06B38, immortal_check2);
+                     hack_dlclose(handle);
                  });
 
     WhenSoLoaded("libcoordinator.so",
@@ -121,10 +132,21 @@ void other() {
                      auto base = (char *) handle->biasaddr;
                      logi("onload libcoordinator");
                      InlineHookAddr(base, 0x08F08, decode_str_ai2);
-                     InlineHookAddr(base, 0x09030, coord_check1);
-                     InlineHookAddr(base, 0x9290, coord_check2);
-                     InlineHookAddr(base, 0x07358, coord_check3);
+//                     InlineHookAddr(base, 0x09030, coord_check1);
+//                     InlineHookAddr(base, 0x9290, coord_check2);
+//                     InlineHookAddr(base, 0x07358, coord_check3);
+                     hack_dlclose(handle);
                  });
+
+    WhenSoLoaded("libmars.so",
+                 [&](const string &path, void *addr, const string &funcType) {
+                     auto handle = hack_dlopen("libmars.so", 0);
+                     auto base = (char *) handle->biasaddr;
+                     logi("onload libmars");
+                     InlineHookAddr(base, 0x75A4, decode_str_ai3);
+                     hack_dlclose(handle);
+                 });
+
 }
 
 extern "C" JNIEXPORT void JNICALL

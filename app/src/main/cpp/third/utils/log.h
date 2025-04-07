@@ -179,7 +179,7 @@ namespace xbyl {
 
             va_list ap;
             va_start(ap, fmt);
-            string result = format_string((head + fmt).c_str(), ap);
+            string result = xbyl::format_string((head + fmt).c_str(), ap);
             va_end(ap);
             for (const std::unique_ptr<adapter> &item: adapters) {
                 if (item->enabled) {

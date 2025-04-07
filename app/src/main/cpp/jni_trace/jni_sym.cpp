@@ -111,6 +111,34 @@ ExternCallHook(CallNonvirtualDoubleMethod, jdouble, JNIEnv*, jobject, jclass, jm
 
 ExternCallHook(CallNonvirtualVoidMethod, void, JNIEnv*, jobject, jclass, jmethodID)
 
+ExternCallHook(DefineClass, jclass, JNIEnv*, const char*, jobject, const jbyte*, jsize)
+
+ExternCallHook(FindClass, jclass, JNIEnv*, const char*)
+
+ExternCallHook(NewLocalRef, jobject, JNIEnv*, jobject)
+
+ExternCallHook(AllocObject, jobject, JNIEnv*, jclass)
+
+ExternCallHook(NewObjectV, jobject, JNIEnv*, jclass, jmethodID, va_list)
+
+ExternCallHook(NewObjectA, jobject, JNIEnv*, jclass, jmethodID, const jvalue*)
+
+ExternCallHook(GetObjectClass, jclass, JNIEnv*, jobject)
+
+ExternCallHook(GetMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
+
+ExternCallHook(GetFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
+
+ExternCallHook(GetStaticMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
+
+ExternCallHook(GetStaticFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
+
+ExternCallHook(Throw, jint, JNIEnv*, jthrowable)
+
+ExternCallHook(ThrowNew, jint, JNIEnv*, jclass, const char *)
+
+ExternCallHook(ExceptionOccurred, jthrowable, JNIEnv*)
+
 
 #define AddSymbolInfo(symName)  SymbolInfo{.isReg=false, .sym=  #symName, .stub=(void*)Hook_##symName, .org=(void**) &pHook_##symName}
 #define AddSymbolInfoBySym(symName)  SymbolInfo{.isReg=true, .sym=  #symName, .stub=(void*)Hook_##symName, .org=(void**) &pHook_##symName}
@@ -202,6 +230,20 @@ bool jni_sym::init(fake_dlctx_ref_t handleLibArt, JNIEnv *env) {
             AddSymbolInfoByJniEnv(CallNonvirtualVoidMethod, env),
             AddSymbolInfoByJniEnv(CallNonvirtualVoidMethodV, env),
             AddSymbolInfoByJniEnv(CallNonvirtualVoidMethodA, env),
+//            AddSymbolInfoByJniEnv(DefineClass, env),
+//            AddSymbolInfoByJniEnv(FindClass, env),
+//            AddSymbolInfoByJniEnv(NewLocalRef, env),
+//            AddSymbolInfoByJniEnv(AllocObject, env),
+//            AddSymbolInfoByJniEnv(NewObjectV, env),
+//            AddSymbolInfoByJniEnv(NewObjectA, env),
+//            AddSymbolInfoByJniEnv(GetObjectClass, env),
+//            AddSymbolInfoByJniEnv(GetMethodID, env),
+//            AddSymbolInfoByJniEnv(GetFieldID, env),
+//            AddSymbolInfoByJniEnv(GetStaticMethodID, env),
+//            AddSymbolInfoByJniEnv(GetStaticFieldID, env),
+//            AddSymbolInfoByJniEnv(Throw, env),
+//            AddSymbolInfoByJniEnv(ThrowNew, env),
+//            AddSymbolInfoByJniEnv(ExceptionOccurred, env),
     };
 
 //    auto names = getSynName(env);
@@ -221,7 +263,12 @@ bool jni_sym::init(fake_dlctx_ref_t handleLibArt, JNIEnv *env) {
 //    }
 
     for (int i = 0; i < jniHooks.size(); ++i) {
-        logi("%s: %p", jniHooks[i].sym.c_str(), jniHooks[i].target);
+        auto stack = GetStackInfo(1, jniHooks[i].target);
+        logi("hook info: %s, %p, %p , %s",
+             jniHooks[i].sym.c_str(),
+             jniHooks[i].target,
+             stack[0].offset,
+             stack[0].name.c_str());
     }
     return true;
 }

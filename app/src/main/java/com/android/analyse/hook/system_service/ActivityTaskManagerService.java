@@ -1,11 +1,9 @@
-package com.andriod.analyse.hook.system_service;
+package com.android.analyse.hook.system_service;
 
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
 
 import com.common.log;
 import com.common.tools.hooker.FakeClass;
@@ -13,6 +11,7 @@ import com.common.tools.hooker.FakeClassBase;
 import com.common.tools.hooker.FakeMethod;
 import com.common.tools.hooker.FakeParams;
 import com.common.tools.hooker.Hooker;
+import com.frida.frida_helper;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -42,7 +41,7 @@ public class ActivityTaskManagerService extends FakeClassBase {
         String log = "";
         log += "pkg name: " + callingPackage + ", ";
         for (Intent item : intents) {
-            log += item + ", ";
+            log += frida_helper.object_2_string(item) + ", ";
         }
 //        log += "\n" + Log.getStackTraceString(new RemoteException());
         return log;

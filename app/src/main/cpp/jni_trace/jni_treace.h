@@ -73,3 +73,41 @@ public:
 extern JniTrace jniTrace;
 extern __thread bool passJniTrace;
 extern __thread bool passCallMethod;
+
+
+#define ForwardArgs7(type, value)  value
+#define ForwardArgs6(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs7(__VA_ARGS__))
+#define ForwardArgs5(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs6(__VA_ARGS__))
+#define ForwardArgs4(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs5(__VA_ARGS__))
+#define ForwardArgs3(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs4(__VA_ARGS__))
+#define ForwardArgs2(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs3(__VA_ARGS__))
+#define ForwardArgs1(type, value, ...)  value __VA_OPT__(,) __VA_OPT__(ForwardArgs2(__VA_ARGS__))
+#define ForwardArgs(...) ForwardArgs1(__VA_ARGS__)
+
+#define ForwardType7(type, value)  type, value
+#define ForwardType6(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType7(__VA_ARGS__))
+#define ForwardType5(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType6(__VA_ARGS__))
+#define ForwardType4(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType5(__VA_ARGS__))
+#define ForwardType3(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType4(__VA_ARGS__))
+#define ForwardType2(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType3(__VA_ARGS__))
+#define ForwardType1(type, value, ...)  type value __VA_OPT__(,) __VA_OPT__(ForwardType2(__VA_ARGS__))
+#define ForwardType(...) ForwardType1(__VA_ARGS__)
+
+
+#define DefineHookStubCheckThreadPassJniTrace(StackFun, Func, Ret, ...)           \
+    Ret logHook_##Func(const vector<Stack> &_stack,ForwardType(__VA_ARGS__));     \
+    Ret (*pHook_##Func)(ForwardType(__VA_ARGS__));                                \
+    Ret Hook_##Func(ForwardType(__VA_ARGS__)){                                    \
+        auto stack = StackFun();                                                  \
+        if (passJniTrace|| jniTrace.CheckTargetModule(stack) == -1) {             \
+            return pHook_##Func(ForwardArgs(__VA_ARGS__));                        \
+        }                                                                         \
+        passJniTrace = true;                                                      \
+        defer([] { passJniTrace = false; });                                      \
+        return logHook_##Func(stack,ForwardArgs(__VA_ARGS__));                    \
+    }                                                                             \
+    Ret logHook_##Func(const vector<Stack> &_stack, ForwardType(__VA_ARGS__))
+
+
+#define DefineHookStubCheckThreadPassJniTrace_Stack0(Func, Ret, ...) DefineHookStubCheckThreadPassJniTrace(GetStack0, Func, Ret,  __VA_ARGS__)
+#define DefineHookStubCheckThreadPassJniTrace_Stack01(Func, Ret, ...) DefineHookStubCheckThreadPassJniTrace(GetStack01, Func, Ret, __VA_ARGS__)

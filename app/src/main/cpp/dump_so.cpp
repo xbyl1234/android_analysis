@@ -47,7 +47,7 @@ bool dump_so(const string &libName, const string &save_path_dir) {
     }
 
     ofstream ofs;
-    ofs.open(format_string("%s/%d_%p_%s",
+    ofs.open(xbyl::format_string("%s/%d_%p_%s",
                            save_path_dir.c_str(),
                            getpid(),
                            maps.get_module_base(libName),

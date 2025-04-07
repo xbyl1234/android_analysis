@@ -1,8 +1,7 @@
-package com.andriod.analyse.hook.system_service;
+package com.android.analyse.hook.system_service;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.media.tv.TableRequest;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -15,7 +14,6 @@ import com.common.tools.hooker.FakeParams;
 import com.common.tools.hooker.Hooker;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 @FakeClass(ClassName = "android.app.IActivityTaskManager$Stub$Proxy")
 public class IActivityTaskManagerStubProxy extends FakeClassBase {

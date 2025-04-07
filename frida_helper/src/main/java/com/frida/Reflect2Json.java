@@ -62,10 +62,20 @@ public class Reflect2Json {
         try {
             return Class.forName(clasName);
         } catch (Throwable e) {
-            Log.e("Reflect2Json", "not find class " + clasName);
+            log.e("not find class " + clasName);
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static String warpKey(String key, Class clz) {
+        if (clz == null) {
+            return key;
+        }
+        if (isBaseType(clz) || isArray(clz) || isMap(clz)) {
+            return key;
+        }
+        return key + "_" + clz.getName();
     }
 
     public static Field GetField(Class _class, String name) throws Throwable {
@@ -190,12 +200,13 @@ public class Reflect2Json {
         put(Pattern.compile("sun.misc.Cleaner"), nullSerialize);
         put(Pattern.compile("androidx.lifecycle.*"), toStringSerialize);
         put(Pattern.compile("dalvik.*"), toStringSerialize);
-        put(Pattern.compile("java.util.concurrent.*"), toStringSerialize);
         put(Pattern.compile("libcore.io.*"), toStringSerialize);
         put(Pattern.compile("sun.misc.Cleaner"), toStringSerialize);
         put(Pattern.compile("java.lang.ref.*"), toStringSerialize);
         put(Pattern.compile("java.util.jar.JarFile"), toStringSerialize);
         put(Pattern.compile("java.util.concurrent.*"), toStringSerialize);
+        put(Pattern.compile("android.safetycenter.*"), toStringSerialize);
+        put(Pattern.compile("android.database.sqlite.*"), toStringSerialize);
     }};
 
     static Map<Class, Serialize> bastTypeSerializeMaps = new HashMap<Class, Serialize>() {{
@@ -251,118 +262,177 @@ public class Reflect2Json {
         return Map.class.isAssignableFrom(clz);
     }
 
-    static Object serializeClassStaticFieldFlag = new Object();
     static Serialize objectSerialize = new Serialize() {
         @Override
         public Object write(Config config, Class clz, Object value) throws Throwable {
-            if (value == null && !config.serializeStatic) {
-                return null;
-            }
-            long clzHashCode = 0;
-            if (clz != null) {
-                clzHashCode = clz.hashCode();
-            }
-            long objHashCode = 0;
-            if (value != null) {
-                objHashCode = value.hashCode();
-            }
-            long hashCode = ((long) clzHashCode << 32) | objHashCode;
-            if (config.hashCodeList.contains(hashCode)) {
-                return "_duplication_object";
-            }
-//            log.i(clz.getName() + ", hashCode: " + hashCode);
-            config.hashCodeList.add(hashCode);
-            JSONObject selfJson = new JSONObject();
-            Field[] fields = clz.getDeclaredFields();
-            for (Field field : fields) {
-                field.setAccessible(true);
-                String fieldName = field.getName();
-                if (!config.checkAllow(field)) {
-                    continue;
+            JSONObject selfJson = null;
+            try {
+                if (value == null && !config.serializeStatic) {
+                    return null;
                 }
-                Class fieldClz = null;
-                Object fieldValue = GetFieldValue(field, value);
-                if (fieldValue != null) {
-                    fieldClz = fieldValue.getClass();
-                } else {
-                    fieldClz = field.getType();
+                long clzHashCode = 0;
+                if (clz != null) {
+                    clzHashCode = clz.hashCode();
                 }
-                Serialize serialize = getSerializeClz(fieldClz);
-                selfJson.put(fieldName, serialize.write(config, fieldClz, fieldValue));
-            }
+                long objHashCode = 0;
+                if (value != null) {
+                    objHashCode = value.hashCode();
+                }
+                long hashCode = ((long) clzHashCode << 32) | objHashCode;
+                if (config.hashCodeList.contains(hashCode)) {
+                    return "_duplication_object";
+                }
+                //log.i(clz.getName() + ", hashCode: " + hashCode);
+                config.hashCodeList.add(hashCode);
+                selfJson = new JSONObject();
+                Field[] fields = clz.getDeclaredFields();
+                for (Field field : fields) {
+                    field.setAccessible(true);
+                    String fieldName = field.getName();
+                    if (!config.checkAllow(field)) {
+                        continue;
+                    }
+                    Class fieldClz = null;
+                    Object fieldValue = GetFieldValue(field, value);
+                    if (fieldValue != null) {
+                        fieldClz = fieldValue.getClass();
+                    } else {
+                        fieldClz = field.getType();
+                    }
+                    Serialize serialize = getSerializeClz(fieldClz);
+                    selfJson.put(warpKey(fieldName, fieldClz),
+                            serialize.write(config, fieldClz, fieldValue));
+                }
 
-            if (config.allowSupper()) {
-                Class supClz = getSuperClass(clz);
-                if (supClz != null) {
-                    Serialize serialize = getSerializeClz(supClz);
-                    selfJson.put("_super", serialize.write(config, supClz, value));
+                if (config.allowSupper()) {
+                    Class supClz = getSuperClass(clz);
+                    if (supClz != null) {
+                        Serialize serialize = getSerializeClz(supClz);
+                        selfJson.put(warpKey("_super", supClz),
+                                serialize.write(config, supClz, value));
+                    }
                 }
-            }
 //            config.hashCodeList.remove(hashCode);
-            return selfJson;
+                return selfJson;
+            } catch (Throwable e) {
+                log.e("frida_helper: " + clz.getName() + ", " + e);
+                e.printStackTrace();
+                return selfJson;
+            }
         }
     };
 
     static Serialize listSerialize = new Serialize() {
 
         abstract class ListLoop {
-            abstract void callback(Object obj) throws Throwable;
+            abstract void callback(int idx, Object obj) throws Throwable;
         }
 
         void forInList(Class clz, Object value, ListLoop loop) throws Throwable {
             if (Collection.class.isAssignableFrom(clz)) {
+                int idx = 0;
                 for (Object obj : (Collection) value) {
-                    loop.callback(obj);
+                    loop.callback(idx, obj);
+                    idx++;
                 }
             } else if (clz.isArray()) {
                 for (int i = 0; i < Array.getLength(value); i++) {
                     Object obj = Array.get(value, i);
-                    loop.callback(obj);
+                    loop.callback(i, obj);
                 }
             }
         }
 
+        //        @Override
+//        public Object write(Config config, Class clz, Object value) throws Throwable {
+//            JSONArray jas = new JSONArray();
+//            try {
+//                if (value == null) {
+//                    return null;
+//                }
+//                forInList(clz, value, new ListLoop() {
+//                    @Override
+//                    void callback(Object obj) throws Throwable {
+//                        if (obj != null) {
+//                            Class objClz = obj.getClass();
+//                            Serialize serialize = getSerializeClz(objClz);
+//                            jas.add(serialize.write(config, objClz, obj));
+//                        } else {
+//                            jas.add(null);
+//                        }
+//                    }
+//                });
+//                return jas;
+//            } catch (Throwable e) {
+//                log.e("frida_helper: " + clz.getName() + ", " + e);
+//                e.printStackTrace();
+//                return jas;
+//            }
+//        }
         @Override
         public Object write(Config config, Class clz, Object value) throws Throwable {
-            if (value == null) {
-                return null;
-            }
-            JSONArray jas = new JSONArray();
-            forInList(clz, value, new ListLoop() {
-                @Override
-                void callback(Object obj) throws Throwable {
-                    if (obj != null) {
-                        Class objClz = obj.getClass();
-                        Serialize serialize = getSerializeClz(objClz);
-                        jas.add(serialize.write(config, objClz, obj));
-                    } else {
-                        jas.add(null);
-                    }
+            JSONObject jas = new JSONObject();
+            try {
+                if (value == null) {
+                    return null;
                 }
-            });
-            return jas;
+                forInList(clz, value, new ListLoop() {
+                    @Override
+                    void callback(int idx, Object obj) throws Throwable {
+                        if (obj != null) {
+                            Class objClz = obj.getClass();
+                            Serialize serialize = getSerializeClz(objClz);
+                            jas.put(warpKey(String.valueOf(idx), obj.getClass()),
+                                    serialize.write(config, objClz, obj));
+                        } else {
+                            jas.put(String.valueOf(idx), null);
+                        }
+                    }
+                });
+                return jas;
+            } catch (Throwable e) {
+                log.e("frida_helper: " + clz.getName() + ", " + e);
+                e.printStackTrace();
+                return jas;
+            }
         }
     };
 
     static Serialize mapSerialize = new Serialize() {
         @Override
         public Object write(Config config, Class clz, Object value) throws Throwable {
-            if (value == null) {
-                return null;
-            }
-            JSONObject json = new JSONObject();
-            Map map = (Map) value;
-            for (Object key : map.keySet()) {
-                Object obj = map.get(key);
-                if (obj != null) {
-                    Class objClz = obj.getClass();
-                    Serialize serialize = getSerializeClz(objClz);
-                    json.put(key.toString(), serialize.write(config, objClz, obj));
-                } else {
-                    json.put(key.toString(), null);
+            JSONObject json = null;
+            try {
+                if (value == null) {
+                    return null;
                 }
+                json = new JSONObject();
+                Map map = (Map) value;
+                for (Object key : map.keySet()) {
+                    Object obj = map.get(key);
+                    if (key == null) {
+                        if (obj == null) {
+                            continue;
+                        }
+                        json.put("_null", obj.toString());
+                        continue;
+                    }
+
+                    if (obj != null) {
+                        Class objClz = obj.getClass();
+                        Serialize serialize = getSerializeClz(objClz);
+                        json.put(warpKey(key.toString(), objClz),
+                                serialize.write(config, objClz, obj));
+                    } else {
+                        json.put(key.toString(), null);
+                    }
+                }
+                return json;
+            } catch (Throwable e) {
+                log.e("frida_helper: " + clz.getName() + ", " + e);
+                e.printStackTrace();
+                return json;
             }
-            return json;
         }
     };
 
@@ -375,7 +445,7 @@ public class Reflect2Json {
     }
 
     static Serialize getSerializeClz(Class clz) {
-//        log.i("getSerializeClz: " + clz.getName());
+        //log.i("getSerializeClz: " + clz.getName());
         Serialize result = bastTypeSerializeMaps.get(clz);
         if (result != null) {
             return result;
@@ -424,7 +494,7 @@ public class Reflect2Json {
 
     public static Object Object2Json(Config config, Class clz, Object obj) throws Throwable {
         try {
-//            log.i("Object2Json: " + clz.getName() + ", " + obj);
+            //log.i("Object2Json: " + clz.getName() + ", " + obj);
             Serialize serialize = getSerializeClz(clz);
             Object result = serialize.write(config, clz, obj);
             if (result == null) {

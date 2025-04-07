@@ -7,7 +7,7 @@
 #include <jni.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <functional>
 
 using std::string;
 using std::mutex;
@@ -120,11 +120,12 @@ std::string ReadFile(const std::string &path);
 
 bool ReadFile(const std::string &path, char **data, int *len);
 
-std::string StringPrintf(const char *fmt, ...);
+namespace xbyl {
 
 std::string format_string(const string fmt, ...);
 
 std::string format_string(const char *fmt, va_list ap);
+}
 
 long get_system_time_nanosecond();  // 纳秒
 long get_system_time_microsecond(); // 微秒

@@ -1,48 +1,42 @@
 #include "hook.h"
 #include "art_method_name.h"
-
-#define CheckStack0AndCall(Sym, ...)    auto stack = GetStack0();                                       \
-                                        auto result = pHook_##Sym(__VA_ARGS__);                         \
-                                        int targetIdx = jniTrace.CheckTargetModule(stack);                                                                \
-                                        if (targetIdx==-1 || passJniTrace) {       \
-                                            return result;                                              \
-                                        }                                                               \
-                                        passJniTrace = true;                                            \
-                                        defer([] { passJniTrace = false; })
-
+#include "log_maker.h"
 
 //_ZN3art3JNI12NewStringUTFEP7_JNIEnvPKc
-DefineHookStub(NewStringUTF, jstring, JNIEnv *env, const char *utf) {
-    CheckStack0AndCall(NewStringUTF, env, utf);
-
-    string logs = format_string("jni call NewStringUTF: \n");
-    logs += format_string("\t\t\t\t\tret %p: %s\n", result, utf);
-    logs += format_string("\t\t\t\t\tat: %p, target: %d\n", stack[0].offset, targetIdx);
-    log2file("%s", logs.c_str());
+DefineHookStubCheckThreadPassJniTrace_Stack0(NewStringUTF, jstring, JNIEnv *,env, const char *,utf) {
+    Logs logs;
+    logs.setStack(_stack);
+    logs.setJniEnv(env);
+    logs.setName("NewStringUTF");
+    logs.setParams("char*", utf);
+    auto result = pHook_NewStringUTF(env, utf);
+    logs.setResult("jint", result);
+    logs.log();
     return result;
 }
 
-DefineHookStub(GetStringUTFChars, const char*, JNIEnv *env, jstring java_string,
-               jboolean *is_copy) {
-    CheckStack0AndCall(GetStringUTFChars, env, java_string, is_copy);
-
-    string logs = format_string("jni call GetStringUTFChars: \n");
-    logs += format_string("\t\t\t\t\tret %p: %s\n", java_string, result);
-    logs += format_string("\t\t\t\t\tat: %p, target: %d\n", stack[0].offset, targetIdx);
-    log2file("%s", logs.c_str());
+DefineHookStubCheckThreadPassJniTrace_Stack0(GetStringUTFChars, const char*, JNIEnv *,env, jstring, java_string,
+               jboolean *,is_copy) {
+    Logs logs;
+    logs.setStack(_stack);
+    logs.setJniEnv(env);
+    logs.setName("GetStringUTFChars");
+    logs.setParams("jstring", java_string);
+    auto result = pHook_GetStringUTFChars(env, java_string, is_copy);
+    logs.setResult("char*", result);
+    logs.log();
     return result;
 }
 
-DefineHookStub(GetStringUTFLength, jsize, JNIEnv *env, jstring jstr) {
-    CheckStack0AndCall(GetStringUTFLength, env, jstr);
-
-    string logs = format_string("jni call GetStringUTFLength: \n");
-    auto cstr = pHook_GetStringUTFChars(env, jstr, nullptr);
-    logs += format_string("\t\t\t\t\tstr %p: %s\n", jstr, cstr);
-    logs += format_string("\t\t\t\t\tret: %d\n", result);
-    logs += format_string("\t\t\t\t\tat: %p, target: %d\n", stack[0].offset, targetIdx);
-    log2file("%s", logs.c_str());
-    delete cstr;
+DefineHookStubCheckThreadPassJniTrace_Stack0(GetStringUTFLength, jsize, JNIEnv *,env, jstring ,jstr) {
+    Logs logs;
+    logs.setStack(_stack);
+    logs.setJniEnv(env);
+    logs.setName("GetStringUTFLength");
+    logs.setParams("jstring", jstr);
+    auto result = pHook_GetStringUTFLength(env, jstr);
+    logs.setResult("jint", result);
+    logs.log();
     return result;
 }
 

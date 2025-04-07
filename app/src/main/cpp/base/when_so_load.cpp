@@ -26,7 +26,7 @@ do_linker_log(int priority, const char *format, va_list args) {
     if (strstr(format, "c-tor") && !strstr(format, "Done")) {
         va_list cp_va;
         va_copy(cp_va, args);
-        LOGI("do_linker_log1 - %s", format_string(format, cp_va).c_str());
+        LOGI("do_linker_log1 - %s", xbyl::format_string(format, cp_va).c_str());
         char *type = va_arg(args, char*);
         void *addr = va_arg(args, void*);
         char *path = va_arg(args, char*);

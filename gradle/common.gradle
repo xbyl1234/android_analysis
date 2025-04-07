@@ -60,6 +60,7 @@ def decompressDir(String srcPath, String destPath) throws Exception {
             fos.close()
         }
     }
+    zf.close()
     println("decompress finish")
 }
 
@@ -80,18 +81,18 @@ def buildDex(String name) {
     def SdkPath = properties.getProperty('sdk.dir')
 //    def SdkPath = "C:\\Users\\xbyl\\AppData\\Local\\Android\\Sdk"
 //                def SdkPath = "C:\\Users\\Administrator\\AppData\\Local\\Android\\Sdk"
-    def d8Path = SdkPath + "\\build-tools\\34.0.0\\d8.bat"
-    def libPath = SdkPath + "\\platforms\\android-33\\android.jar"
+    def d8Path = SdkPath + "\\build-tools\\35.0.0\\d8.bat"
+    def libPath = SdkPath + "\\platforms\\android-35\\android.jar"
     def outputFilePath = projectPath + "\\out\\" + name + ".zip"
     def jarPath = ""
     switch (isDebug()) {
         case -1:
             return
         case 1:
-            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\debug\\classes.jar"
+            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\debug\\bundleLibCompileToJarDebug\\classes.jar"
             break
         case 0:
-            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\release\\classes.jar"
+            jarPath = projectPath + "\\build\\intermediates\\compile_library_classes_jar\\release\\bundleLibCompileToJarDebug\\classes.jar"
             break
     }
 
@@ -123,7 +124,7 @@ class BuildAllDex extends BuildAdapter {
     }
 
     void buildFinished(BuildResult result) {
-        gradle.buildDex("android_helper")
+//        gradle.buildDex("android_helper")
         gradle.buildDex("frida_helper")
     }
 }

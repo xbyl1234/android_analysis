@@ -75,15 +75,6 @@ int64_t string_to_time(const string &time_str, const string &fmt = "%Y-%m-%d %H:
     return mktime(&tm);
 }
 
-string format_string(const string &fmt, ...) {
-    string buffer;
-    buffer.resize(1024);
-    va_list va;
-    va_start(va, fmt);
-    vsnprintf((char *) buffer.c_str(), buffer.size(), fmt.c_str(), va);
-    va_end(va);
-    return std::move(buffer);
-}
 
 bool WritFile(const string &path, const char *buf, int len) {
     std::fstream file(path.c_str(), std::ios::out | std::ios::binary);
@@ -365,6 +356,7 @@ void StringAppendV(std::string *dst, const char *format, va_list ap) {
     delete[] buf;
 }
 
+namespace xbyl{
 std::string format_string(const char *fmt, va_list ap) {
     std::string result;
     StringAppendV(&result, fmt, ap);
@@ -378,6 +370,7 @@ std::string format_string(const string fmt, ...) {
     StringAppendV(&result, fmt.c_str(), ap);
     va_end(ap);
     return result;
+    }
 }
 
 std::string StringPrintf(const char *fmt, ...) {

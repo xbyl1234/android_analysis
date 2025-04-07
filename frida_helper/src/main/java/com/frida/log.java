@@ -3,9 +3,8 @@ package com.frida;
 import android.util.Log;
 
 
-public class log {
-    static String tag = "caller info";
-
+class log {
+    static String tag = "frida_helper";
 
     public static void i(String msg, boolean result) {
         if (result) {
@@ -18,6 +17,7 @@ public class log {
     public static void i(String msg) {
         Log.i(tag, msg);
     }
+
     public static void e(String msg) {
         Log.e(tag, msg);
     }

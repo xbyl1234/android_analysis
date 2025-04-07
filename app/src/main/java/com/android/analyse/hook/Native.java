@@ -1,5 +1,6 @@
 package com.android.analyse.hook;
 
+import android.os.Build;
 import com.common.log;
 
 public class Native {
@@ -18,7 +19,6 @@ public class Native {
 
     public static native void nativeWrite(long handle, String data);
 
-    public static native void nativeWrite(long handle, byte[] data);
 
     public static native void passFbSslPinning();
     public static native void passInsSslPinning();
@@ -26,14 +26,21 @@ public class Native {
         try {
             System.load("/data/libanalyse.so");
             initNative(pkgName);
-//            log.SetLogger(new log.LogWriter() {
-//                @Override
-//                public void log(int level, String msg) {
-//                    nativeLog(level, msg);
-//                }
-//            });
+            log.SetLogger(new log.LogWriter() {
+                @Override
+                public void log(int level, String msg) {
+                    nativeLog(level, msg);
+                }
+            });
         } catch (Throwable e) {
             log.i("load analyse lib error: " + e);
+        }
+    }
+    public static void LoadRePublic() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                || (Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1 &&
+                Build.VERSION.PREVIEW_SDK_INT > 0)) {
+            System.loadLibrary("republic");
         }
     }
 }

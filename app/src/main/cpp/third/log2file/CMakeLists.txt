@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.28.0+)
 project("log2file")
 
 file(GLOB log2file_src

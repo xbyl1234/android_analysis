@@ -1,14 +1,46 @@
 package com.common.tools.hooker;
 
 import com.common.log;
+import com.frida.frida_helper;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
+import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 public class HookTools {
+    public static void fastHookAll(ClassLoader classLoader, String clzName, String... methodName) {
+        for (String name : methodName) {
+            XposedBridge.hookAllMethods(XposedHelpers.findClass(clzName, classLoader), name, new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
+                    Object result = XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
+                    log.i("call " + name + " params: " + frida_helper.object_2_string(param.args) + ", result: " + frida_helper.object_2_string(result));
+                    return result;
+                }
+            });
+        }
+    }
+
+    public static Map<Integer, String> getTransactName(String clzName) throws Throwable {
+        Map<Integer, String> result = new HashMap<>();
+        Class clz = Class.forName(clzName);
+        Field[] fields = clz.getDeclaredFields();
+        for (Field f : fields) {
+            f.setAccessible(true);
+            if (f.getName().startsWith("TRANSACTION_") && f.getType() == int.class) {
+                result.put(f.getInt(null), f.getName());
+            }
+        }
+        return result;
+    }
+
     public static Constructor GetConstructor(Class clazz, Class<?>... parameterTypes) {
         try {
             return clazz.getDeclaredConstructor(parameterTypes);

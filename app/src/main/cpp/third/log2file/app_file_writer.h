@@ -86,7 +86,8 @@ public:
     static fstream *open_file(const string &appDataPath, const string &name) {
         srandom(::time(nullptr) + getpid());
         auto file = new fstream();
-        string path = format_string(appDataPath + "/%s_%d_%d", name.c_str(), getpid(), random());
+        string path = xbyl::format_string(appDataPath + "/%s_%d_%d", name.c_str(), getpid(),
+                                    random());
         file->open(path, ios::out | ios::binary);
         if (!file->is_open()) {
             LOGI("analyse open log file %s error: %d", path.c_str(), errno);

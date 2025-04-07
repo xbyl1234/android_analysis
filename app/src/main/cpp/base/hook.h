@@ -68,11 +68,10 @@ bool hookAll(vector<SymbolInfo> *symbols);
                                                             (dobby_dummy_func_t) &Replace, (dobby_dummy_func_t *)&pHook_##FuncName)
 
 
-#define GetStack_1()        GetStackInfo(1, __builtin_return_address(1))
 
 #define GetStack0()        GetStackInfo(1, __builtin_return_address(0))
 #define GetStack1()        GetStackInfo(1, __builtin_return_address(1))
-#define GetStack2()        GetStackInfo(2, __builtin_return_address(0), \
+#define GetStack01()        GetStackInfo(2, __builtin_return_address(0), \
                                         __builtin_return_address(1))
 
 #define GetStack3()        GetStackInfo(3, __builtin_return_address(0), \

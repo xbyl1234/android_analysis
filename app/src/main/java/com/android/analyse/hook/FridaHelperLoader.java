@@ -9,7 +9,7 @@ public class FridaHelperLoader {
     static public Class GsonJson;
     static public Class FridaHelper;
 
-    public static boolean InjectFridaHelp(ClassLoader classLoader) {
+    static boolean InjectFridaHelp(ClassLoader classLoader) {
         if (hasInjectFridaHelper) {
             return hasInjectFridaHelper;
         }

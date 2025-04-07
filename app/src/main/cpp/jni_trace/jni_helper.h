@@ -5,47 +5,53 @@
 
 #define HackDlsym(Handle, Value, Symbol)            Value = (decltype(Value)) hack_dlsym(Handle,Symbol); \
                                                     if (Value == nullptr) {                              \
-                                                        notFind=Symbol;                                  \
-                                                        break;                                           \
+                                                        notFind=true;                                    \
+                                                        logi("not find %s",Symbol);                       \
                                                     }
+#define HackDlsymCanNull(Handle, Value, Symbol)            Value = (decltype(Value)) hack_dlsym(Handle,Symbol); \
+                                                            if (Value == nullptr) {                              \
+                                                                logi("not find %s",Symbol);                       \
+                                                            }
+
+
 #define JniEnv2Thread(env) *(void **) ((uint64_t) env + sizeof(void *))
 
 class JniHelper {
 public:
     bool Init(fake_dlctx_ref_t art) {
-        string notFind;
-        while (true) {
-            sdkInt = get_sdk_int();
-            HackDlsym(art, pJNI_GetCreatedJavaVMs, "JNI_GetCreatedJavaVMs")
-            HackDlsym(art, pGetEnv, "_ZN3art3JII6GetEnvEP7_JavaVMPPvi")
-            HackDlsym(art, _ZN3art9ArtMethod12JniShortNameEv, "_ZN3art9ArtMethod12JniShortNameEv")
-            HackDlsym(art, _ZN3art9ArtMethod11JniLongNameEv, "_ZN3art9ArtMethod11JniLongNameEv")
-            HackDlsym(art, _ZN3art9ArtMethod12PrettyMethodEb, "_ZN3art9ArtMethod12PrettyMethodEb")
-            HackDlsym(art, JNIEnvExt_AddLocalReference,
-                      "_ZN3art9JNIEnvExt17AddLocalReferenceIP8_jstringEET_NS_6ObjPtrINS_6mirror6ObjectEEE")
-            HackDlsym(art, JNIEnvExt_DeleteLocalRef, "_ZN3art9JNIEnvExt14DeleteLocalRefEP8_jobject")
-            if (sdkInt == 29) {
-                HackDlsym(art, Thread_HandleScopeContains,
-                          "_ZNK3art6Thread19HandleScopeContainsEP8_jobject")
-            }
-            break;
-        }
-        if (!notFind.empty()) {
+        bool notFind = false;
+        sdkInt = get_sdk_int();
+        HackDlsym(art, pJNI_GetCreatedJavaVMs, "JNI_GetCreatedJavaVMs")
+        HackDlsymCanNull(art, pGetEnv, "_ZN3art3JII6GetEnvEP7_JavaVMPPvi")
+        HackDlsym(art, _ZN3art9ArtMethod12JniShortNameEv, "_ZN3art9ArtMethod12JniShortNameEv")
+        HackDlsym(art, _ZN3art9ArtMethod11JniLongNameEv, "_ZN3art9ArtMethod11JniLongNameEv")
+        HackDlsym(art, _ZN3art9ArtMethod12PrettyMethodEb, "_ZN3art9ArtMethod12PrettyMethodEb")
+//        HackDlsym(art, JNIEnvExt_AddLocalReference,
+//                  "_ZN3art9JNIEnvExt17AddLocalReferenceIP8_jstringEET_NS_6ObjPtrINS_6mirror6ObjectEEE")
+//        HackDlsym(art, JNIEnvExt_DeleteLocalRef, "_ZN3art9JNIEnvExt14DeleteLocalRefEP8_jobject")
+//        if (sdkInt == 29) {
+//            HackDlsym(art, Thread_HandleScopeContains,"_ZNK3art6Thread19HandleScopeContainsEP8_jobject")
+//        }
+        if (notFind) {
             return false;
         }
         if (!GetJvm()) {
+            logi("get jvm error");
             return false;
         }
         auto env = GetEnv();
         if (!env) {
+            logi("get env error");
             return false;
         }
         jclass obj = env->FindClass("java/lang/Object");
         if (!obj) {
+            logi("find Object error");
             return false;
         }
         methodID_toString = env->GetMethodID(obj, "toString", "()Ljava/lang/String;");
         if (!methodID_toString) {
+            logi("get toString error");
             return false;
         }
         return true;
@@ -53,7 +59,11 @@ public:
 
     JNIEnv *GetEnv() {
         JNIEnv *env;
-        pGetEnv(jvm, (void **) &env, JNI_VERSION_1_4);
+        if (pGetEnv != nullptr) {
+            pGetEnv(jvm, (void **) &env, JNI_VERSION_1_4);
+        } else {
+            jvm->GetEnv((void **) &env, JNI_VERSION_1_4);
+        }
         return env;
     }
 
@@ -73,21 +83,20 @@ public:
         return name;
     }
 
-    jvalue DeleteLocalRef(JNIEnv *env, jvalue obj) {
-        return JNIEnvExt_DeleteLocalRef(env, obj);
+//    jvalue DeleteLocalRef(JNIEnv *env, jvalue obj) {
+//        return JNIEnvExt_DeleteLocalRef(env, obj);
+//    }
 
-    }
+//    jvalue AddLocalReference(JNIEnv *env, jvalue obj) {
+//        return JNIEnvExt_AddLocalReference(env, obj);
+//    }
 
-    jvalue AddLocalReference(JNIEnv *env, jvalue obj) {
-        return JNIEnvExt_AddLocalReference(env, obj);
-    }
-
-    bool HandleScopeContains(JNIEnv *env, jobject obj) {
-        if (sdkInt == 29) {
-            return Thread_HandleScopeContains(JniEnv2Thread(env), obj);
-        }
-        return true;
-    }
+//    bool HandleScopeContains(JNIEnv *env, jobject obj) {
+//        if (sdkInt == 29) {
+//            return Thread_HandleScopeContains(JniEnv2Thread(env), obj);
+//        }
+//        return true;
+//    }
 
     string Object2Str(JNIEnv *env, jobject obj) {
         auto toString_ret = (jstring) (env->CallObjectMethod(obj, methodID_toString));
@@ -108,11 +117,11 @@ private:
 
     jint (*pGetEnv)(JavaVM *, void **, jint);
 
-    jvalue (*JNIEnvExt_AddLocalReference)(JNIEnv *env, jvalue obj);
+//    jvalue (*JNIEnvExt_AddLocalReference)(JNIEnv *env, jvalue obj);
 
-    jvalue (*JNIEnvExt_DeleteLocalRef)(JNIEnv *env, jvalue obj);
+//    jvalue (*JNIEnvExt_DeleteLocalRef)(JNIEnv *env, jvalue obj);
 
-    bool (*Thread_HandleScopeContains)(void *thd, jobject obj);
+//    bool (*Thread_HandleScopeContains)(void *thd, jobject obj);
 
     bool GetJvm() {
         jsize unused;

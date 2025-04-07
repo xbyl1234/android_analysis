@@ -12,7 +12,7 @@ int hook_sprinf(char *dest, const char *format, ...) {
     LOGI("on sprintf %s", format);
     va_list va;
     va_start(va, format);
-    string result = format_string(format, va);
+    string result = xbyl::format_string(format, va);
     va_end(va);
     ::strcpy(dest, result.c_str());
 
@@ -26,7 +26,7 @@ int hook_safe_sprinf(char *dest, size_t maxlen, const char *format, ...) {
     LOGI("on sprintf2 %s", format);
     va_list va;
     va_start(va, format);
-    string result = format_string(format, va);
+    string result = xbyl::format_string(format, va);
     va_end(va);
     ::strcpy(dest, result.c_str());
 

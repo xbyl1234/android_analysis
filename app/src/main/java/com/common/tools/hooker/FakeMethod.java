@@ -18,7 +18,7 @@ public @interface FakeMethod {
 
     boolean mustHook() default false;
 
-    boolean staticHook() default false;
+    boolean constructor() default false;
 
-    String switchName() default "";
+    boolean hookAll() default false;
 }
