@@ -47,3 +47,10 @@ chinglish document
 wecome to give me money, qq is 734248537, see you leite 
 
  
+2025/4/8
+jni trace look at cpp/jnitrace
+object format look at frida_helper
+
+
+
+
