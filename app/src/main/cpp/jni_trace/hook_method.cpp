@@ -4,7 +4,7 @@
 
 #define IvkCallA(name, result, env, obj, method, jv)  \
     Logs logs;                                        \
-    logs.setStack(GetStack0());                      \
+    logs.setStack(MethodStack());                      \
     logs.setJniEnv(env);                              \
     logs.setName(#name);                              \
     logs.setCallParams(nullptr, obj, method, jv);     \
@@ -15,7 +15,7 @@
 
 #define IvkCallAVoid(name, result, env, obj, method, jv)\
     Logs logs;                                          \
-    logs.setStack(GetStack0());                        \
+    logs.setStack(MethodStack());                        \
     logs.setJniEnv(env);                                \
     logs.setName(#name);                                \
     logs.setCallParams(nullptr, obj, method, jv);       \
@@ -24,7 +24,7 @@
 
 #define IvkCallAClz(name, result, env, obj, clz, method, jv)\
     Logs logs;                                              \
-    logs.setStack(GetStack0());                            \
+    logs.setStack(MethodStack());                            \
     logs.setJniEnv(env);                                    \
     logs.setName(#name);                                    \
     logs.setCallParams(clz, obj,  method, jv);              \
@@ -35,7 +35,7 @@
 
 #define IvkCallAClzVoid(name, result, env, obj, clz, method, jv) \
     Logs logs;                                                   \
-    logs.setStack(GetStack0());                                 \
+    logs.setStack(MethodStack());                                 \
     logs.setJniEnv(env);                                         \
     logs.setName(#name);                                         \
     logs.setCallParams(clz, obj,  method, jv);                   \
@@ -46,7 +46,7 @@
     va_list ap;                                       \
     va_start(ap, method);                             \
     Logs logs;                                        \
-    logs.setStack(GetStack0());                      \
+    logs.setStack(MethodStack());                      \
     logs.setJniEnv(env);                              \
     logs.setName(#name);                              \
     logs.setCallParams(nullptr, obj,  method, ap);    \
@@ -60,7 +60,7 @@
     va_list ap;                                     \
     va_start(ap, method);                           \
     Logs logs;                                      \
-    logs.setStack(GetStack0());                    \
+    logs.setStack(MethodStack());                    \
     logs.setJniEnv(env);                            \
     logs.setName(#name);                            \
     logs.setCallParams(nullptr, obj,  method, ap);  \
@@ -72,7 +72,7 @@
     va_list ap;                                          \
     va_start(ap, method);                                \
     Logs logs;                                           \
-    logs.setStack(GetStack0());                         \
+    logs.setStack(MethodStack());                         \
     logs.setJniEnv(env);                                 \
     logs.setName(#name);                                 \
     logs.setCallParams(clz, obj,  method, ap);           \
@@ -86,7 +86,7 @@
     va_list ap;                                             \
     va_start(ap, method);                                   \
     Logs logs;                                              \
-    logs.setStack(GetStack0());                            \
+    logs.setStack(MethodStack());                            \
     logs.setJniEnv(env);                                    \
     logs.setName(#name);                                    \
     logs.setCallParams(clz, obj,  method, ap);              \

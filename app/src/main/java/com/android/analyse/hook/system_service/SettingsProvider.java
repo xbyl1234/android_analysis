@@ -48,7 +48,7 @@ public class SettingsProvider extends FakeClassBase {
         if (uid > 2000) {
             if (method.startsWith("GET_")) {
                 if (fixedKeyMaps.containsKey(name)) {
-                    log.i("fake uid: " + Binder.getCallingUid() + ", settings call method: " + method + ", name: " + name);
+//                    log.i("fake uid: " + Binder.getCallingUid() + ", settings call method: " + method + ", name: " + name);
                     return MakeResult(fixedKeyMaps.get(name));
                 }
             }

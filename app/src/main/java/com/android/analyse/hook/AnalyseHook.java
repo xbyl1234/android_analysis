@@ -14,7 +14,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class AnalyseHook implements IXposedHookLoadPackage {
     static boolean hadHook = false;
-
+    static int idx = 0;
     void InjectApp(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         try {
             new File("/sdcard/Android/data/" + lpparam.packageName).mkdir();
@@ -23,7 +23,7 @@ public class AnalyseHook implements IXposedHookLoadPackage {
         }
         FridaHelperLoader.InjectFridaHelp(lpparam.classLoader);
         Native.LoadAnalyseSo(lpparam.packageName);
-        JniTrace.InitJniTrace(FridaHelperLoader.FridaHelper);
+//        JniTrace.InitJniTrace(FridaHelperLoader.FridaHelper);
         WhenHook.WhenAttach.When(new WhenHook.WhenHookAttachCallback() {
             @Override
             public void OnHookBefore(Application application) {
@@ -83,8 +83,9 @@ public class AnalyseHook implements IXposedHookLoadPackage {
                     }
                 }
             }
+            log.i("analyse inject process finish");
         } catch (Throwable e) {
-            log.e("analyse inject error: " + e);
+            log.e("analyse inject error: " + e + ", " + Log.getStackTraceString(e));
         }
     }
 }

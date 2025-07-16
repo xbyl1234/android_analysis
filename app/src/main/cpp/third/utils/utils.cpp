@@ -11,6 +11,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <dlfcn.h>
+#include <sys/mman.h>
+#include <sys/uio.h>
 
 #include "utils.h"
 #include "linux_helper.h"
@@ -74,7 +76,6 @@ int64_t string_to_time(const string &time_str, const string &fmt = "%Y-%m-%d %H:
     stm >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
     return mktime(&tm);
 }
-
 
 bool WritFile(const string &path, const char *buf, int len) {
     std::fstream file(path.c_str(), std::ios::out | std::ios::binary);
@@ -356,20 +357,21 @@ void StringAppendV(std::string *dst, const char *format, va_list ap) {
     delete[] buf;
 }
 
-namespace xbyl{
-std::string format_string(const char *fmt, va_list ap) {
-    std::string result;
-    StringAppendV(&result, fmt, ap);
-    return result;
-}
 
-std::string format_string(const string fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    std::string result;
-    StringAppendV(&result, fmt.c_str(), ap);
-    va_end(ap);
-    return result;
+namespace xbyl {
+    std::string format_string(const char *fmt, va_list ap) {
+        std::string result;
+        StringAppendV(&result, fmt, ap);
+        return result;
+    }
+
+    std::string format_string(const string fmt, ...) {
+        va_list ap;
+        va_start(ap, fmt);
+        std::string result;
+        StringAppendV(&result, fmt.c_str(), ap);
+        va_end(ap);
+        return result;
     }
 }
 
@@ -466,41 +468,6 @@ string ReadPkgDirSelinuxCtx(const string &pkgName) {
     return ret;
 }
 
-static int mem_validate_pipe[2] = {0, 0};
-mutex testMemoryLock;
-
-static void do_pipe2(int pipefd[2]) {
-    pipe2(pipefd, O_CLOEXEC | O_NONBLOCK);
-}
-
-static void open_pipe() {
-    if (mem_validate_pipe[0] != -1)
-        close(mem_validate_pipe[0]);
-    if (mem_validate_pipe[1] != -1)
-        close(mem_validate_pipe[1]);
-    do_pipe2(mem_validate_pipe);
-}
-
-bool check_memory_readable(void *addr) {
-    testMemoryLock.lock();
-    defer([&] {
-        testMemoryLock.unlock();
-    });
-    int ret = -1;
-    ssize_t bytes = 0;
-    do {
-        char buf;
-        bytes = read(mem_validate_pipe[0], &buf, 1);
-    } while (errno == EINTR);
-    if (!(bytes > 0 || errno == EAGAIN || errno == EWOULDBLOCK)) {
-        open_pipe();
-    }
-    do {
-        ret = write(mem_validate_pipe[1], addr, 1);
-    } while (errno == EINTR);
-    return ret > 0;
-}
-
 vector<Stack> GetStackInfo(int num, ...) {
     vector<Stack> frame;
     va_list args;
@@ -523,4 +490,98 @@ vector<Stack> GetStackInfo(int num, ...) {
     }
     va_end(args);
     return frame;
+}
+
+bool check_mem(void *p) {
+    int pageSize = getpagesize();
+    unsigned char vec = 0;
+    uint64_t start = ((uint64_t) p) & (~(pageSize - 1));
+    int result = mincore((void *) start, pageSize, &vec);
+    return result == 0 && vec == 1;
+}
+
+extern "C" bool check_stack(void *p) {
+    if (!check_mem(p)) {
+        return false;
+    }
+    if (!check_mem((void *) *((uint64_t *) p))) {
+        return false;
+    }
+    if (!check_mem((void *) (((uint64_t) p) + 8))) {
+        return false;
+    }
+    if (!check_mem((void *) *((uint64_t *) (((uint64_t) p) + 8)))) {
+        return false;
+    }
+    return true;
+}
+
+string stack2str(const vector<Stack> &stack) {
+    string result;
+    for (const Stack &item: stack) {
+        result += xbyl::format_string("%s:%p,", item.name.c_str(), item.offset);
+    }
+    return result;
+}
+
+string hexdump_memory(const uint8_t *data, size_t size, uint64_t address) {
+    size_t offset = 0;
+    string result;
+    while (offset < size) {
+        result += xbyl::format_string("%08llx: ", address + offset);
+        std::string ascii;
+        for (size_t i = 0; i < 16; ++i) {
+            if (offset + i < size) {
+                uint8_t byte = data[offset + i];
+                result += xbyl::format_string("%02x ", byte);
+                ascii += (std::isprint(byte) ? static_cast<char>(byte) : '.');
+            } else {
+                result += "   ";
+                ascii += " ";
+            }
+            if (i == 7)
+                result += " ";
+        }
+
+        result += " |";
+        result += ascii;
+        result += "|";
+        result += "\n";
+        offset += 16;
+    }
+    return result;
+}
+
+bool is_ascii_string(const uint8_t *data, size_t length) {
+    if (data == nullptr) {
+        return false;
+    }
+    bool hasNonSpaceChar = false;
+    for (size_t i = 0; i < length; ++i) {
+        if (data[i] == '\0') {
+            return hasNonSpaceChar;
+        }
+        if (data[i] < 0x20 || data[i] > 0x7E) {
+            return false;
+        }
+        if (data[i] != ' ') {
+            hasNonSpaceChar = true;
+        }
+    }
+    return hasNonSpaceChar;
+}
+
+bool safe_read_memory(uint64_t address, uint8_t *buffer, size_t length) {
+    struct iovec local_iov;
+    struct iovec remote_iov;
+    local_iov.iov_base = buffer;
+    local_iov.iov_len = length;
+    remote_iov.iov_base = reinterpret_cast<void *>(address);
+    remote_iov.iov_len = length;
+    ssize_t nread = process_vm_readv(getpid(), &local_iov, 1, &remote_iov, 1, 0);
+    if (nread == static_cast<ssize_t>(length)) {
+        return true;
+    } else {
+        return false;
+    }
 }

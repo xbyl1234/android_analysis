@@ -120,24 +120,11 @@ struct MapsInfo {
     void *region_offset;
     std::string permissions;
     std::string path;
+    std::string name;
 };
 
-class MapsHelper {
-public:
-    vector<MapsInfo> mapsInfo;
+void *get_module_base(const vector<MapsInfo> &mapsInfo, const string &libPath);
 
-    int refresh(const string &libPath = "", const string &wantPerm = "");
+void *get_module_end(const vector<MapsInfo> &mapsInfo, const string &libPath);
 
-    int refresh_reg(const string &libPath = "", const string &wantPerm = "");
-
-    void *get_module_base(const string &libPath);
-    void *get_module_base_reg(const string &libPath);
-
-    void *get_module_end(const string &libPath);
-    void *get_module_end_reg(const string &libPath);
-private:
-    void *get_module_base(const string &libPath, bool is_reg);
-    void *get_module_end(const string &libPath, bool is_reg);
-
-    bool get_process_maps(bool is_reg, const string &libPath = "", const string &wantPerm = "");
-};
+vector<MapsInfo> get_process_maps(const string &libPath = "", const string &wantPerm = "");

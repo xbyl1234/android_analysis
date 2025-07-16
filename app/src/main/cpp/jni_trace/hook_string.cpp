@@ -3,7 +3,7 @@
 #include "log_maker.h"
 
 //_ZN3art3JNI12NewStringUTFEP7_JNIEnvPKc
-DefineHookStubCheckThreadPassJniTrace_Stack0(NewStringUTF, jstring, JNIEnv *,env, const char *,utf) {
+DefineHookStubCheckThreadPassJniTrace_String(NewStringUTF, jstring, JNIEnv *,env, const char *,utf) {
     Logs logs;
     logs.setStack(_stack);
     logs.setJniEnv(env);
@@ -15,7 +15,7 @@ DefineHookStubCheckThreadPassJniTrace_Stack0(NewStringUTF, jstring, JNIEnv *,env
     return result;
 }
 
-DefineHookStubCheckThreadPassJniTrace_Stack0(GetStringUTFChars, const char*, JNIEnv *,env, jstring, java_string,
+DefineHookStubCheckThreadPassJniTrace_String(GetStringUTFChars, const char*, JNIEnv *,env, jstring, java_string,
                jboolean *,is_copy) {
     Logs logs;
     logs.setStack(_stack);
@@ -28,7 +28,7 @@ DefineHookStubCheckThreadPassJniTrace_Stack0(GetStringUTFChars, const char*, JNI
     return result;
 }
 
-DefineHookStubCheckThreadPassJniTrace_Stack0(GetStringUTFLength, jsize, JNIEnv *,env, jstring ,jstr) {
+DefineHookStubCheckThreadPassJniTrace_String(GetStringUTFLength, jsize, JNIEnv *,env, jstring ,jstr) {
     Logs logs;
     logs.setStack(_stack);
     logs.setJniEnv(env);

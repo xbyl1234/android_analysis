@@ -34,7 +34,7 @@ DealGetFieldValue(const string &tags, const string &type, const vector<Stack> &s
 }
 
 #define DefineGetFieldHook(type, sigType) \
-DefineHookStubCheckThreadPassJniTrace_Stack0(Get##type##Field, jobject, JNIEnv *,env, jobject, obj, jfieldID, field) { \
+DefineHookStubCheckThreadPassJniTrace_Field(Get##type##Field, jobject, JNIEnv *,env, jobject, obj, jfieldID, field) { \
    return DealGetFieldValue("Get" #type "Field",sigType, _stack, pHook_Get##type##Field, env, obj, field);\
 }
 
@@ -57,7 +57,7 @@ DefineGetFieldHook(Float, "F")
 DefineGetFieldHook(Double, "D")
 
 #define DefineSetFieldHook(type, sigType) \
-DefineHookStubCheckThreadPassJniTrace_Stack0(Set##type##Field, void, JNIEnv*, env, jobject, obj, jfieldID, field, jvalue, v) { \
+DefineHookStubCheckThreadPassJniTrace_Field(Set##type##Field, void, JNIEnv*, env, jobject, obj, jfieldID, field, jvalue, v) { \
     DealSetFieldValue("Set" #type "Field",sigType, _stack, pHook_Set##type##Field, env, obj, field,v);\
 }
 

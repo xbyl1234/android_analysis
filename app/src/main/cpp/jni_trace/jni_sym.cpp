@@ -111,33 +111,32 @@ ExternCallHook(CallNonvirtualDoubleMethod, jdouble, JNIEnv*, jobject, jclass, jm
 
 ExternCallHook(CallNonvirtualVoidMethod, void, JNIEnv*, jobject, jclass, jmethodID)
 
-ExternCallHook(DefineClass, jclass, JNIEnv*, const char*, jobject, const jbyte*, jsize)
+ExternHookStub(DefineClass, jclass, JNIEnv*, const char*, jobject, const jbyte*, jsize)
 
-ExternCallHook(FindClass, jclass, JNIEnv*, const char*)
+ExternHookStub(FindClass, jclass, JNIEnv*, const char*)
 
-ExternCallHook(NewLocalRef, jobject, JNIEnv*, jobject)
+ExternHookStub(NewLocalRef, jobject, JNIEnv*, jobject)
 
-ExternCallHook(AllocObject, jobject, JNIEnv*, jclass)
+ExternHookStub(AllocObject, jobject, JNIEnv*, jclass)
 
-ExternCallHook(NewObjectV, jobject, JNIEnv*, jclass, jmethodID, va_list)
+ExternHookStub(NewObjectV, jobject, JNIEnv*, jclass, jmethodID, va_list)
 
-ExternCallHook(NewObjectA, jobject, JNIEnv*, jclass, jmethodID, const jvalue*)
+ExternHookStub(NewObjectA, jobject, JNIEnv*, jclass, jmethodID, const jvalue*)
 
-ExternCallHook(GetObjectClass, jclass, JNIEnv*, jobject)
+ExternHookStub(GetObjectClass, jclass, JNIEnv*, jobject)
 
-ExternCallHook(GetMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
+ExternHookStub(GetMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
 
-ExternCallHook(GetFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
+ExternHookStub(GetFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
 
-ExternCallHook(GetStaticMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
+ExternHookStub(GetStaticMethodID, jmethodID, JNIEnv*, jclass, const char*, const char*)
 
-ExternCallHook(GetStaticFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
+ExternHookStub(GetStaticFieldID, jfieldID, JNIEnv*, jclass, const char*, const char*)
 
-ExternCallHook(Throw, jint, JNIEnv*, jthrowable)
+ExternHookStub(Throw, jint, JNIEnv*, jthrowable)
 
-ExternCallHook(ThrowNew, jint, JNIEnv*, jclass, const char *)
+ExternHookStub(ThrowNew, jint, JNIEnv*, jclass, const char *)
 
-ExternCallHook(ExceptionOccurred, jthrowable, JNIEnv*)
 
 
 #define AddSymbolInfo(symName)  SymbolInfo{.isReg=false, .sym=  #symName, .stub=(void*)Hook_##symName, .org=(void**) &pHook_##symName}
@@ -263,12 +262,9 @@ bool jni_sym::init(fake_dlctx_ref_t handleLibArt, JNIEnv *env) {
 //    }
 
     for (int i = 0; i < jniHooks.size(); ++i) {
-        auto stack = GetStackInfo(1, jniHooks[i].target);
-        logi("hook info: %s, %p, %p , %s",
+        logi("hook info: %s, %p",
              jniHooks[i].sym.c_str(),
-             jniHooks[i].target,
-             stack[0].offset,
-             stack[0].name.c_str());
+             jniHooks[i].target);
     }
     return true;
 }

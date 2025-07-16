@@ -5,7 +5,6 @@
 #include <set>
 #include <dlfcn.h>
 
-#include <unwindstack/LocalUnwinder.h>
 #include "../third/byopen/hack_dlopen.h"
 #include "../third/utils/jni_helper.hpp"
 #include "../third/utils/linux_helper.h"
@@ -70,25 +69,39 @@ static int CheckAllowModule(const vector<Stack> &frame, const initializer_list<s
 
     string logs = "pass: ";
     for (const auto &item: frame) {
-        logs += item.name + ", ";
+        logs += xbyl::format_string("%s:%p", item.name.c_str(), item.offset) + ", ";
     }
     logi(logs.c_str());
     return -1;
 }
 
 static int CheckFirstModule(const vector<Stack> &frame, const initializer_list<string> &strs) {
+    if (frame.size() == 0) {
+        logd("allow frame.size() <= 0");
+        return 0;
+    }
+
+    const Stack *first = nullptr;
+    for (auto &item: frame) {
+        if (item.name.find("/libanalyse.so") == -1) {
+            first = &item;
+            break;
+        }
+    }
+    if (first == nullptr) {
+        logd("allow no first");
+        return 0;
+    }
+
     for (int i = 0; i < strs.size(); i++) {
-        if (frame[0].name.find(*(strs.begin() + i)) != string::npos) {
-            return i;
+        if (first->name.find(*(strs.begin() + i)) != string::npos) {
+            logd("pass %s:%p", first->name.c_str(), first->offset);
+            return -1;
         }
     }
 
-    string logs = "pass: ";
-    for (const auto &item: frame) {
-        logs += item.name + ", ";
-    }
-    logi(logs.c_str());
-    return -1;
+    logd("allow %s:%p", first->name.c_str(), first->offset);
+    return 0;
 }
 
 extern "C"
@@ -118,7 +131,11 @@ JNIEXPORT jboolean JNICALL init(JNIEnv *env, jclass frida_helper) {
         }
         jniTrace.Init((jclass) env->NewGlobalRef(frida_helper), handleLibArt,
                       [](const vector<Stack> &frame) -> int {
+
                           return CheckFirstModule(frame, {
+                                  {"/apex/com.android.art/"},
+                                  {"/system/lib64/"},
+                                  {"/system/framework/arm64/"},
                                   {"libandroid_runtime.so"},
                                   {"libanalyse.so"},
                                   {"libart.so"},
@@ -136,12 +153,25 @@ JNIEXPORT jboolean JNICALL init(JNIEnv *env, jclass frida_helper) {
                                   {"libmonochrome_64.so"},
                                   {"libframework-connectivity-tiramisu-jni.so"},
                                   {"pcam.jar"},
+                                  {"libapminsighta.so"},
                                   {"libmedia_jni.so"},
                                   {"com.google.android.gms"},
                                   {"com.google.android.trichrome"},
                                   {"libwebviewchromium_loader.so"},
                                   {"libconscrypt_gmscore_jni.so"},
-                          }) == -1 ? 1 : -1;
+                          });
+
+//                          for (const auto &item: frame) {
+//                              if (item.name.find("/memfd:") != string::npos &&
+//                                  item.name.find("jit-zygote-cache") == string::npos &&
+//                                  item.name.find("jit-cache") == string::npos) {
+//                                  return 1;
+//                              }
+//                          }
+//
+//                          return CheckAllowModule(frame, {
+//                                  {"libjiagu_sdk"}
+//                          });
                       },
                       passJavaMethod);
         jniTrace.Hook();

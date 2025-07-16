@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <application>
+
+<!--        <receiver-->
+<!--            android:name="com.uv.aa.bb.c1"-->
+<!--            android:directBootAware="true"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.BOOT_COMPLETED"></action>-->
+<!--                <action android:name="android.intent.action.ACTION_SHUTDOWN"></action>-->
+<!--                <action android:name="android.intent.action.ACTION_REBOOT"></action>-->
+<!--                <action android:name="android.intent.action.ACTION_POWER_CONNECTED"></action>-->
+<!--                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"></action>-->
+<!--                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"></action>-->
+<!--                <action android:name="android.intent.action.MEDIA_MOUNTED"></action>-->
+<!--            </intent-filter>-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.samsung.intent.action.LAZY_BOOT_COMPLETE"></action>-->
+<!--            </intent-filter>-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.DEVICE_CUSTOMIZATION_READY"></action>-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+
+    </application>
+
+
 </manifest>

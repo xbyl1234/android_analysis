@@ -79,7 +79,7 @@ string SockAddr2String(const struct sockaddr *addr) {
     const sockaddr_in *addrIn = (sockaddr_in *) addr;
     char ip_address[INET_ADDRSTRLEN]{};
     inet_ntop(addrIn->sin_family, &(addrIn->sin_addr), ip_address, INET_ADDRSTRLEN);
-    return format_string("%s:%d", ip_address, ntohs(addrIn->sin_port));
+    return xbyl::format_string("%s:%d", ip_address, ntohs(addrIn->sin_port));
 }
 
 static sockaddr_in LocalServerAddr;

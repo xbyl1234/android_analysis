@@ -46,7 +46,7 @@ _HookLogWitchLibWithStack(const string &libName, const string &funcName, void *r
 }
 
 bool _resolve(SymbolInfo *item, const char *symbol, void *addr) {
-    if (item->isReg && !regex_search(symbol, regex(item->sym))) {
+    if (item->isReg && strstr(symbol, item->sym.c_str()) == nullptr) {
         return false;
     }
     if (item->sym != symbol) {
@@ -99,10 +99,3 @@ bool hookAll(vector<SymbolInfo> *symbols) {
 }
 
 
-string stack2str(const vector<Stack> &stack) {
-    string result;
-    for (const Stack &item: stack) {
-        result += xbyl::format_string("%s:%p", item.name.c_str(), item.offset);
-    }
-    return result;
-}

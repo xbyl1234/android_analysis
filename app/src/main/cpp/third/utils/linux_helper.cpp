@@ -12,8 +12,6 @@
 
 #include "log.h"
 #include "linux_helper.h"
-#include "selinux/selinux.h"
-#include "string_match.h"
 
 using namespace std;
 
@@ -449,33 +447,10 @@ traverse_path(const std::string &rootPath,
 #define PRIxPTR __PRI_PTR_prefix "x" /* uintptr_t */
 
 
-int MapsHelper::refresh_reg(const string &libPath, const string &wantPerm) {
-    if (!get_process_maps(true, libPath, wantPerm)) {
-        return -1;
-    }
-    return mapsInfo.size();
-}
-
-int MapsHelper::refresh(const string &libPath, const string &wantPerm) {
-    if (!get_process_maps(false, libPath, wantPerm)) {
-        return -1;
-    }
-    return mapsInfo.size();
-}
-
-void *MapsHelper::get_module_end(const string &libPath) {
-    return get_module_end(libPath, false);
-}
-
-void *MapsHelper::get_module_end_reg(const string &libPath) {
-    return get_module_end(libPath, true);
-}
-
-void *MapsHelper::get_module_end(const string &libPath, bool is_reg) {
-    StringMatch match(libPath, is_reg);
+void *get_module_end(const vector<MapsInfo> &mapsInfo, const string &libPath) {
     void *start = nullptr;
     for (const auto &item: mapsInfo) {
-        if (!match.is_in(item.path)) {
+        if (item.path.find(libPath) == -1) {
             continue;
         }
         if ((uint64_t) item.region_start > (uint64_t) start) {
@@ -485,19 +460,10 @@ void *MapsHelper::get_module_end(const string &libPath, bool is_reg) {
     return start;
 }
 
-void *MapsHelper::get_module_base(const string &libPath) {
-    return get_module_base(libPath, false);
-}
-
-void *MapsHelper::get_module_base_reg(const string &libPath) {
-    return get_module_base(libPath, true);
-}
-
-void *MapsHelper::get_module_base(const string &libPath, bool is_reg) {
-    StringMatch match(libPath, is_reg);
+void *get_module_base(const vector<MapsInfo> &mapsInfo, const string &libPath) {
     void *start = (void *) -1;
     for (const auto &item: mapsInfo) {
-        if (!match.is_in(item.path)) {
+        if (item.path.find(libPath) == -1) {
             continue;
         }
         if ((uint64_t) item.region_start < (uint64_t) start) {
@@ -507,13 +473,11 @@ void *MapsHelper::get_module_base(const string &libPath, bool is_reg) {
     return start == (void *) -1 ? nullptr : start;
 }
 
-bool MapsHelper::get_process_maps(bool is_reg, const string &libPath, const string &wantPerm) {
-    mapsInfo.clear();
-    StringMatch match(libPath, is_reg);
-
+vector<MapsInfo> get_process_maps(const string &libPath, const string &wantPerm) {
+    vector<MapsInfo> mapsInfo;
     FILE *fp = fopen("/proc/self/maps", "r");
     if (fp == nullptr) {
-        return false;
+        return mapsInfo;
     }
 
     while (!feof(fp)) {
@@ -557,15 +521,14 @@ bool MapsHelper::get_process_maps(bool is_reg, const string &libPath, const stri
                    &inode,
                    &path_index) < 7) {
             fclose(fp);
-            return false;
+            return mapsInfo;
         }
 
         string path = &line_buffer[path_index];
         if (path.ends_with("\n")) {
             path.pop_back();
         }
-//        LOGI("%s %d", path.c_str(), regex_search(path, regLibPath));
-        if ((!libPath.empty() && !match.is_in(path)) ||
+        if ((!libPath.empty() && path.find(libPath) == -1) ||
             (!wantPerm.empty() && wantPerm != permissions)) {
             continue;
         }
@@ -576,9 +539,11 @@ bool MapsHelper::get_process_maps(bool is_reg, const string &libPath, const stri
         info.region_offset = region_offset;
         info.permissions = permissions;
         info.path = path;
-        mapsInfo.push_back(move(info));
+        size_t pos = path.find_last_of('/');
+        info.name = (pos == std::string::npos) ? path : path.substr(pos + 1);
+        mapsInfo.push_back(std::move(info));
     }
     fclose(fp);
 
-    return !mapsInfo.empty();
+    return std::move(mapsInfo);
 }

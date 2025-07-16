@@ -1,7 +1,6 @@
 #include <mutex>
 #include "../third/utils/macro_helper.h"
 #include "../third/utils/log.h"
-#include "../third/json/json.h"
 #include "../third/byopen/hack_dlopen.h"
 #include "hook.h"
 #include "when_hook.h"
@@ -26,20 +25,23 @@ do_linker_log(int priority, const char *format, va_list args) {
     if (strstr(format, "c-tor") && !strstr(format, "Done")) {
         va_list cp_va;
         va_copy(cp_va, args);
-        LOGI("do_linker_log1 - %s", xbyl::format_string(format, cp_va).c_str());
+        logi("do_linker_log1 - %s", xbyl::format_string(format, cp_va).c_str());
         char *type = va_arg(args, char*);
         void *addr = va_arg(args, void*);
         char *path = va_arg(args, char*);
         if (path == nullptr || strlen(path) < targetLibName.size()) {
+            logi("path == nullptr || strlen(path) < targetLibName.size()");
             return 0;
         }
         if (strstr(path, targetLibName.c_str())) {
             hadCall = true;
-//            logi("WhenSoInitHook on %s init", targetLibName.c_str());
+            logi("WhenSoInitHook on %s init", targetLibName.c_str());
             callBack(path, addr, type);
+        } else {
+            logi("!strstr(path, targetLibName.c_str())");
         }
     } else {
-//        LOGI("do_linker_log2 - %s", format_string(format, args).c_str());
+//        LOGI("do_linker_log2 - %s", xbyl::format_string(format, args).c_str());
     }
     return 0;
 }

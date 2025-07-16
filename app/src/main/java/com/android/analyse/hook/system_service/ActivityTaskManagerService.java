@@ -48,6 +48,16 @@ public class ActivityTaskManagerService extends FakeClassBase {
     }
 
     @FakeMethod(needXposedParams = true)
+    public void moveTaskToFront(XC_MethodHook.MethodHookParam params, @FakeParams(ClassName = "android.app.IApplicationThread") Object appThread,
+                                String callingPackage,
+                                int taskId,
+                                int flags,
+                                Bundle bOptions) throws Throwable {
+        log.i("moveTaskToFront  " + callingPackage + ", " + taskId + ", " + flags);
+        CallOriginalMethod(params);
+    }
+
+    @FakeMethod(needXposedParams = true)
     int startActivities(XC_MethodHook.MethodHookParam params, @FakeParams(ClassName = "android.app.IApplicationThread") Object caller, String callingPackage,
                         String callingFeatureId, Intent[] intents, String[] resolvedTypes, IBinder resultTo,
                         Bundle bOptions, int userId) throws Throwable {

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <functional>
+#include <dlfcn.h>
 
 using std::string;
 using std::mutex;
@@ -121,10 +122,9 @@ std::string ReadFile(const std::string &path);
 bool ReadFile(const std::string &path, char **data, int *len);
 
 namespace xbyl {
+    std::string format_string(const string fmt, ...);
 
-std::string format_string(const string fmt, ...);
-
-std::string format_string(const char *fmt, va_list ap);
+    std::string format_string(const char *fmt, va_list ap);
 }
 
 long get_system_time_nanosecond();  // 纳秒
@@ -142,15 +142,50 @@ string ReadPkgDirSelinuxCtx(const string &pkgName);
 int
 TraversePackagesList(std::function<bool(const vector<string> &)> callback);
 
-bool check_memory_readable(void *addr);
-
 void gen_hex(int len, char *result);
 
+string get_packet_name();
+
 struct Stack {
-    string name;
+    std::string name;
     void *offset;
 };
 
 vector<Stack> GetStackInfo(int num, ...);
 
-string get_packet_name();
+extern "C" int get_call_stack(void *p);
+
+bool check_mem(void *p);
+
+extern "C" bool check_stack(void *p);
+
+string stack2str(const vector<Stack> &stack);
+
+extern inline std::vector<Stack> GetStackInfo() __attribute__((always_inline)) {
+    std::vector<Stack> frame;
+    void *p[10] = {0};
+    int count = get_call_stack(p);
+    for (int i = 0; i < count; i++) {
+        Dl_info info{};
+        void *addr = p[i];
+        if (dladdr(addr, &info) != 0) {
+            frame.push_back({
+                                    info.dli_fname,
+                                    (void *) ((uint64_t) addr - (uint64_t) info.dli_fbase)
+                            });
+        } else {
+            frame.push_back({
+                                    "unknow",
+                                    (void *) ((uint64_t) addr - (uint64_t) info.dli_fbase)
+                            });
+        }
+    }
+    return frame;
+}
+
+string hexdump_memory(const uint8_t *data, size_t size, uint64_t address);
+
+bool is_ascii_string(const uint8_t *data, size_t length);
+
+bool safe_read_memory(uint64_t address, uint8_t *buffer, size_t length);
+

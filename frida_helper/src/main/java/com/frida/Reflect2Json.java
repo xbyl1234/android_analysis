@@ -1,8 +1,11 @@
 package com.frida;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.ContentProvider;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.Signature;
 import android.os.BaseBundle;
 import android.os.Bundle;
@@ -23,6 +26,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import dalvik.system.BaseDexClassLoader;
+import dalvik.system.DexClassLoader;
+import dalvik.system.InMemoryDexClassLoader;
+import dalvik.system.PathClassLoader;
 
 public class Reflect2Json {
 
@@ -179,16 +187,28 @@ public class Reflect2Json {
         put(android.net.IpPrefix.class, toStringSerialize);
         put(android.net.DhcpInfo.class, toStringSerialize);
         put(ClassLoader.class, toStringSerialize);
+        put(DexClassLoader.class, toStringSerialize);
+        put(PathClassLoader.class, toStringSerialize);
+        put(BaseDexClassLoader.class, toStringSerialize);
+        put(InMemoryDexClassLoader.class, toStringSerialize);
+        put(Thread.class, toStringSerialize);
+        put(ThreadGroup.class, toStringSerialize);
         put(Package.class, toStringSerialize);
         put(Class.class, toStringSerialize);
         put(File.class, toStringSerialize);
         put(Locale.class, toStringSerialize);
         put(Activity.class, toStringSerialize);
         put(ContentProvider.class, toStringSerialize);
+        put(ApplicationInfo.class, toStringSerialize);
+        put(PackageInfo.class, toStringSerialize);
+        put(Application.class, toStringSerialize);
+        put(android.os.Looper.class, toStringSerialize);
+        put(android.os.Handler.class, toStringSerialize);
         put(byte[].class, byteArraySerialize);
 
         put(Signature.class, signatureSerialize);
         put(Bundle.class, BundleSerialize);
+        put(BaseBundle.class, BundleSerialize);
     }};
 
     static Map<Pattern, Serialize> customClzNameRegSerializeMaps = new HashMap<Pattern, Serialize>() {{
@@ -207,6 +227,10 @@ public class Reflect2Json {
         put(Pattern.compile("java.util.concurrent.*"), toStringSerialize);
         put(Pattern.compile("android.safetycenter.*"), toStringSerialize);
         put(Pattern.compile("android.database.sqlite.*"), toStringSerialize);
+        put(Pattern.compile("android.hardware.*"), toStringSerialize);
+        put(Pattern.compile("android.webkit.*"), toStringSerialize);
+        put(Pattern.compile("android.app.ApplicationPackageManager"), toStringSerialize);
+        put(Pattern.compile("java.lang.BootClassLoader"), toStringSerialize);
     }};
 
     static Map<Class, Serialize> bastTypeSerializeMaps = new HashMap<Class, Serialize>() {{

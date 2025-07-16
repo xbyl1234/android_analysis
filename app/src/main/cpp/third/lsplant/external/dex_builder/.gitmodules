@@ -1,0 +1,3 @@
+[submodule "external/parallel_hashmap"]
+	path = external/parallel_hashmap
+	url = https://github.com/greg7mdp/parallel-hashmap.git

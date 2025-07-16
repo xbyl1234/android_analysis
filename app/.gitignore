@@ -1,2 +1,6 @@
 /build
 /libs/armeabi-v7a/
+/release/baselineProfiles/0/app-release.dm
+/release/baselineProfiles/1/app-release.dm
+/release/app-release.apk
+/release/output-metadata.json

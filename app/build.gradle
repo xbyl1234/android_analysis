@@ -50,6 +50,8 @@ android {
 }
 
 dependencies {
+    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:+'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     compileOnly 'de.robv.android.xposed:api:53:sources'
     compileOnly 'de.robv.android.xposed:api:53'
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -60,6 +62,8 @@ dependencies {
     implementation 'com.google.gms:google-services:4.4.1'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'com.android.installreferrer:installreferrer:2.2'
+    implementation 'com.google.android.gms:play-services-appset:16.0.2'
     implementation project(path: ':android_helper')
     implementation project(path: ':frida_helper')
 }

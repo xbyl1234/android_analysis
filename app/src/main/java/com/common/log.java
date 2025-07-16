@@ -22,7 +22,7 @@ public class log {
     }
 
     static String Tag = "analyse_log";
-    static int LOGMAXLENGTH = 1024;
+    static int LOGMAXLENGTH = 500;
 
     static LogWriter writer = null;
 
@@ -47,18 +47,11 @@ public class log {
         }
     }
 
-    synchronized public static void unLimitAdbLog(int level, String msg) {
-        int strLength = msg.length();
-        int start = 0;
-        int end = LOGMAXLENGTH;
-        for (int i = 0; i < 100; i++) {
-            if (strLength > end) {
+    synchronized static void unLimitAdbLog(int level, String msg) {
+        synchronized ("unLimitAdbLog") {
+            for (int start = 0; start < msg.length(); start += LOGMAXLENGTH) {
+                int end = Math.min(start + LOGMAXLENGTH, msg.length());
                 AdbLog(level, msg.substring(start, end));
-                start = end;
-                end = end + LOGMAXLENGTH;
-            } else {
-                AdbLog(level, msg.substring(start, strLength));
-                break;
             }
         }
     }
@@ -76,7 +69,7 @@ public class log {
     }
 
     public static void d(String msg) {
-        Log(LogLevel.Info, msg, true);
+        Log(LogLevel.Debug, msg, true);
     }
 
     public static void i(String msg) {
@@ -85,6 +78,10 @@ public class log {
 
     public static void w(String msg) {
         Log(LogLevel.Waring, msg, true);
+    }
+
+    public static void e(String msg, Throwable e) {
+        e(msg + ", error: " + e);
     }
 
     public static void e(String msg) {

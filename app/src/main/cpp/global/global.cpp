@@ -3,8 +3,12 @@
 using namespace std;
 static string pkgName;
 
+string get_packet_name();
 
 string getPkgName() {
+    if (pkgName.empty()) {
+        pkgName = get_packet_name();
+    }
     return pkgName;
 }
 

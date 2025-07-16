@@ -3,7 +3,7 @@
 #include "jni_treace.h"
 #include "log_maker.h"
 
-DefineHookStubCheckThreadPassJniTrace_Stack0(GetObjectArrayElement, jobject, JNIEnv*, env, jobjectArray,
+DefineHookStubCheckThreadPassJniTrace_Array(GetObjectArrayElement, jobject, JNIEnv*, env, jobjectArray,
                                       array, jsize, index) {
     Logs logs;
     logs.setStack(_stack);
@@ -17,7 +17,7 @@ DefineHookStubCheckThreadPassJniTrace_Stack0(GetObjectArrayElement, jobject, JNI
     return result;
 }
 
-DefineHookStubCheckThreadPassJniTrace_Stack0(SetObjectArrayElement, void, JNIEnv *,env, jobjectArray, array,
+DefineHookStubCheckThreadPassJniTrace_Array(SetObjectArrayElement, void, JNIEnv *,env, jobjectArray, array,
                                       jsize, index,jobject, value) {
     Logs logs;
     logs.setStack(_stack);

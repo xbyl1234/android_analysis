@@ -109,6 +109,16 @@ public class ActivityManagerService extends FakeClassBase {
 //    }
 
     @FakeMethod(needXposedParams = true)
+    public void moveTaskToFront(XC_MethodHook.MethodHookParam params, @FakeParams(ClassName = "android.app.IApplicationThread") Object appThread,
+                                String callingPackage,
+                                int taskId,
+                                int flags,
+                                Bundle bOptions) throws Throwable {
+        log.i("moveTaskToFront  " + callingPackage + ", " + taskId + ", " + flags);
+        CallOriginalMethod(params);
+    }
+
+    @FakeMethod(needXposedParams = true)
     public final int broadcastIntentWithFeature(XC_MethodHook.MethodHookParam params, @FakeParams(ClassName = "android.app.IApplicationThread") Object caller,
                                                 String callingFeatureId, Intent intent, String resolvedType,
                                                 @FakeParams(ClassName = "android.content.IIntentReceiver") Object resultTo,
@@ -116,11 +126,10 @@ public class ActivityManagerService extends FakeClassBase {
                                                 String[] requiredPermissions, String[] excludedPermissions,
                                                 String[] excludedPackages, int appOp, Bundle bOptions,
                                                 boolean serialized, boolean sticky, int userId) throws Throwable {
-        log.i("broadcastIntentWithFeature " + intent);
-
-
-
-
+        if (intent != null && intent.getAction().contains("com.google.android.play.core.splitinstall.receiver.SplitInstallUpdateIntentService")) {
+            log.i("broadcastIntentWithFeature " + intent);
+            return 0;
+        }
         return (int) CallOriginalMethod(params);
     }
 

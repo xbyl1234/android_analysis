@@ -109,5 +109,13 @@ extern __thread bool passCallMethod;
     Ret logHook_##Func(const vector<Stack> &_stack, ForwardType(__VA_ARGS__))
 
 
-#define DefineHookStubCheckThreadPassJniTrace_Stack0(Func, Ret, ...) DefineHookStubCheckThreadPassJniTrace(GetStack0, Func, Ret,  __VA_ARGS__)
-#define DefineHookStubCheckThreadPassJniTrace_Stack01(Func, Ret, ...) DefineHookStubCheckThreadPassJniTrace(GetStack01, Func, Ret, __VA_ARGS__)
+#define MethodStack GetStackInfo
+#define ArrayStack GetStackInfo
+#define FieldStack GetStackInfo
+#define RegisterNativesStack GetStackInfo
+#define StringStack GetStackInfo
+#define ClassStack GetStackInfo
+#define DefineHookStubCheckThreadPassJniTrace_Field(Func, Ret, ...)  DefineHookStubCheckThreadPassJniTrace(FieldStack, Func, Ret,  __VA_ARGS__)
+#define DefineHookStubCheckThreadPassJniTrace_Array(Func, Ret, ...)  DefineHookStubCheckThreadPassJniTrace(ArrayStack, Func, Ret,  __VA_ARGS__)
+#define DefineHookStubCheckThreadPassJniTrace_String(Func, Ret, ...)  DefineHookStubCheckThreadPassJniTrace(StringStack, Func, Ret,  __VA_ARGS__)
+#define DefineHookStubCheckThreadPassJniTrace_Class(Func, Ret, ...)  DefineHookStubCheckThreadPassJniTrace(StringStack, Func, Ret,  __VA_ARGS__)
