@@ -53,7 +53,10 @@ namespace format {
         }
         const char *ret = env->GetStringUTFChars((jstring) jret, nullptr);
         string result = ret;
-        delete[] ret;
+        if (ret) {
+            env->ReleaseStringUTFChars((jstring) jret, ret);
+        }
+        env->DeleteLocalRef(jret);
         return result;
     }
 }
@@ -67,11 +70,11 @@ static int CheckAllowModule(const vector<Stack> &frame, const initializer_list<s
         }
     }
 
-    string logs = "pass: ";
-    for (const auto &item: frame) {
-        logs += xbyl::format_string("%s:%p", item.name.c_str(), item.offset) + ", ";
-    }
-    logi(logs.c_str());
+//    string logs = "pass: ";
+//    for (const auto &item: frame) {
+//        logs += xbyl::format_string("%s:%p", item.name.c_str(), item.offset) + ", ";
+//    }
+//    logi(logs.c_str());
     return -1;
 }
 
@@ -132,34 +135,34 @@ JNIEXPORT jboolean JNICALL init(JNIEnv *env, jclass frida_helper) {
         jniTrace.Init((jclass) env->NewGlobalRef(frida_helper), handleLibArt,
                       [](const vector<Stack> &frame) -> int {
 
-                          return CheckFirstModule(frame, {
-                                  {"/apex/com.android.art/"},
-                                  {"/system/lib64/"},
-                                  {"/system/framework/arm64/"},
-                                  {"libandroid_runtime.so"},
-                                  {"libanalyse.so"},
-                                  {"libart.so"},
-                                  {"libjavacore.so"},
-                                  {"libnativeloader.so"},
-                                  {"libopenjdk.so"},
-                                  {"libopenjdkjvm.so"},
-                                  {"libjavacrypto.so"},
-                                  {"libicu_jni.so"},
-                                  {"libgui.so"},
-                                  {"libhwui.so"},
-                                  {"boot.oat"},
-                                  {"libnms.so"},
-                                  {"liballiance.so"},
-                                  {"libmonochrome_64.so"},
-                                  {"libframework-connectivity-tiramisu-jni.so"},
-                                  {"pcam.jar"},
-                                  {"libapminsighta.so"},
-                                  {"libmedia_jni.so"},
-                                  {"com.google.android.gms"},
-                                  {"com.google.android.trichrome"},
-                                  {"libwebviewchromium_loader.so"},
-                                  {"libconscrypt_gmscore_jni.so"},
-                          });
+//                          return CheckFirstModule(frame, {
+//                                  {"/apex/com.android.art/"},
+//                                  {"/system/lib64/"},
+//                                  {"/system/framework/arm64/"},
+//                                  {"libandroid_runtime.so"},
+//                                  {"libanalyse.so"},
+//                                  {"libart.so"},
+//                                  {"libjavacore.so"},
+//                                  {"libnativeloader.so"},
+//                                  {"libopenjdk.so"},
+//                                  {"libopenjdkjvm.so"},
+//                                  {"libjavacrypto.so"},
+//                                  {"libicu_jni.so"},
+//                                  {"libgui.so"},
+//                                  {"libhwui.so"},
+//                                  {"boot.oat"},
+//                                  {"libnms.so"},
+//                                  {"liballiance.so"},
+//                                  {"libmonochrome_64.so"},
+//                                  {"libframework-connectivity-tiramisu-jni.so"},
+//                                  {"pcam.jar"},
+//                                  {"libapminsighta.so"},
+//                                  {"libmedia_jni.so"},
+//                                  {"com.google.android.gms"},
+//                                  {"com.google.android.trichrome"},
+//                                  {"libwebviewchromium_loader.so"},
+//                                  {"libconscrypt_gmscore_jni.so"},
+//                          });
 
 //                          for (const auto &item: frame) {
 //                              if (item.name.find("/memfd:") != string::npos &&
@@ -169,9 +172,9 @@ JNIEXPORT jboolean JNICALL init(JNIEnv *env, jclass frida_helper) {
 //                              }
 //                          }
 //
-//                          return CheckAllowModule(frame, {
-//                                  {"libjiagu_sdk"}
-//                          });
+                          return CheckAllowModule(frame, {
+                                  {"libdmcorexjimwcql"}
+                          });
                       },
                       passJavaMethod);
         jniTrace.Hook();

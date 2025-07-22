@@ -15,6 +15,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class AnalyseHook implements IXposedHookLoadPackage {
     static boolean hadHook = false;
     static int idx = 0;
+    void findJniNative(ClassLoader classLoader) {
+        try {
+            Native.find_jni_native_addr(new Class[]{XposedHelpers.findClass("m41739d0d", classLoader)});
+        } catch (Throwable e) {
+            log.e("findJniNative " + e);
+        }
+    }
     void InjectApp(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         try {
             new File("/sdcard/Android/data/" + lpparam.packageName).mkdir();

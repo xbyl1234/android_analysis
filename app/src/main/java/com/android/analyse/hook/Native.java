@@ -22,6 +22,7 @@ public class Native {
 
     public static native void passFbSslPinning();
     public static native void passInsSslPinning();
+    public static native void find_jni_native_addr(Class []clz);
     static void LoadAnalyseSo(String pkgName) {
         try {
             System.load("/data/libanalyse.so");

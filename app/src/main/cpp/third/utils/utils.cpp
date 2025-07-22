@@ -559,6 +559,9 @@ bool is_ascii_string(const uint8_t *data, size_t length) {
     bool hasNonSpaceChar = false;
     for (size_t i = 0; i < length; ++i) {
         if (data[i] == '\0') {
+            if (i == 0) {
+                return false;
+            }
             return hasNonSpaceChar;
         }
         if (data[i] < 0x20 || data[i] > 0x7E) {

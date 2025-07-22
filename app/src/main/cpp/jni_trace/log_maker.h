@@ -90,28 +90,45 @@ public:
         if (passMethod) {
             return;
         }
-        Json::Value json;
-        json["tid"] = gettid();
-        json["name"] = name;
+        std::string log = xbyl::format_string("tid: %-6d, name: %-20s", gettid(), name.c_str());
         if (!method_pretty_name.empty()) {
-            json["invoke"] = method_pretty_name;
+            log += xbyl::format_string(", invoke: %-50s", method_pretty_name.c_str());
         }
-        for (int i = 0; i < args_type.size(); ++i) {
-            Json::Value item;
-            item["type"] = args_type[i].c_str();
-            item["value"] = argsSerialize[i].c_str();
-            json["args"].append(item);
+        if (!args_type.empty()) {
+            log += "\n\t\t\t args: ";
+            for (size_t i = 0; i < args_type.size(); ++i) {
+                if (i != 0) {
+                    log += "\n\t\t\t       ";
+                }
+                log += xbyl::format_string("%10s: %s",
+                                           args_type[i].c_str(),
+                                           argsSerialize[i].c_str());
+            }
         }
         if (!retSerialize.empty()) {
-            Json::Value item;
-            item["type"] = retType.c_str();
-            item["value"] = retSerialize.c_str();
-            json["return"] = item;
+            log += xbyl::format_string("\n\t\t\t  ret: %10s: %s",
+                                       retType.c_str(),
+                                       retSerialize.c_str());
         }
-        for (const auto &item: stack) {
-            json["stack"].append(xbyl::format_string("%s:%p,", item.name.c_str(), item.offset));
+        if (!stack.empty()) {
+            log += "\n\t\t\t stack: ";
+            size_t i = 0;
+            for (size_t i = 0; i < stack.size(); ++i) {
+                auto item = stack[i];
+                if (item.name.find("libanalyse.so") != -1) {
+                    continue;
         }
-        log2file("%s", Json2String(json).c_str());
+                if (i != 0) {
+                    log += "\n\t\t\t        ";
+                }
+                int p = item.name.find_last_of("/");
+                log += xbyl::format_string("%s:%p",
+                                           p != -1 ? item.name.substr(p).c_str()
+                                                   : item.name.c_str(),
+                                           item.offset);
+            }
+        }
+        log2file("%s", log.c_str());
     }
 
     bool parseMethod(jmethodID method) {

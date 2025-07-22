@@ -14,6 +14,72 @@
 using namespace std;
 using namespace QBDI;
 
+string checkNameLength(const string &name) {
+    return name.length() > 30 ? name.substr(0, 20) + "..." + name.substr(name.length() - 7) : name;
+}
+VMAction traceCallPath(VM *vm, GPRState *gprState, FPRState *fprState, void *data) {
+    auto thiz = (MotherTrace *) data;
+    const InstAnalysis *instAnalysis = vm->getInstAnalysis(
+            ANALYSIS_INSTRUCTION | ANALYSIS_SYMBOL | ANALYSIS_DISASSEMBLY | ANALYSIS_OPERANDS);
+    if (!thiz->checkInRange(instAnalysis->address)) {
+        return VMAction::CONTINUE;
+    }
+    static int depth = 0;
+    string fromModuleName, fromSymbolName, toModuleName, toSymbolName;
+    uint64_t fromOffset = 0, toOffset = 0, targetAddress = 0;
+    if (instAnalysis->isCall) {
+        string regName;
+        for (int i = 0; i < instAnalysis->numOperands; ++i) {
+            auto op = instAnalysis->operands[i];
+            if (op.type == OPERAND_IMM) {
+                targetAddress = instAnalysis->address + (op.value << 2);
+                regName = "im";
+                break;
+            } else if (op.type == OPERAND_GPR && op.regName != string("LR")) {
+                targetAddress = QBDI_GPR_GET(gprState, op.regCtxIdx);
+                regName = op.regName;
+                break;
+            }
+        }
+        thiz->findSymbol(targetAddress, &toModuleName, &toSymbolName, &toOffset);
+        thiz->findSymbol(instAnalysis->address, &fromModuleName, &fromSymbolName, &fromOffset);
+        thiz->log2file("call:%s:%s:%d:%s:%s:%p:%p:%s:%s:%p:%p",
+                       thiz->checkInRange(targetAddress) ? "inside" : "outside",
+                       regName.c_str(),
+                       depth,
+                       fromModuleName.c_str(),
+                       fromSymbolName.c_str(),
+                       instAnalysis->address,
+                       fromOffset,
+                       toModuleName.c_str(),
+                       toSymbolName.c_str(),
+                       targetAddress,
+                       toOffset);
+        if (thiz->checkInRange(targetAddress)) {
+            depth++;
+        }
+    } else if (instAnalysis->isReturn) {
+        targetAddress = QBDI_GPR_GET(gprState, REG_LR);
+        thiz->findSymbol(targetAddress, &toModuleName, &toSymbolName, &toOffset);
+        thiz->findSymbol(instAnalysis->address, &fromModuleName, &fromSymbolName, &fromOffset);
+        thiz->log2file("ret:%d:%s:%s:%p:%p:%s:%s:%p:%p",
+                       depth,
+                       fromModuleName.c_str(),
+                       fromSymbolName.c_str(),
+                       instAnalysis->address,
+                       fromOffset,
+                       toModuleName.c_str(),
+                       toSymbolName.c_str(),
+                       targetAddress,
+                       toOffset);
+        depth--;
+    }
+    if (instAnalysis->address == (uint64_t) thiz->stopAddr) {
+        thiz->log2file("Execution stopped at 0x%lx\n", instAnalysis->address);
+        return VMAction::STOP;
+    }
+    return VMAction::CONTINUE;
+}
 VMAction showPostInstruction(VM *vm, GPRState *gprState, FPRState *fprState, void *data) {
     auto thiz = (MotherTrace *) data;
     const InstAnalysis *instAnalysis = vm->getInstAnalysis(
@@ -71,26 +137,11 @@ VMAction showPreInstruction(VM *vm, GPRState *gprState, FPRState *fprState, void
         symbolName = instAnalysis->symbol;
     }
 
-    Dl_info info{};
-    if (dladdr((void *) instAnalysis->address, &info) != 0) {
-        offset = instAnalysis->address - (uint64_t) info.dli_fbase;
-        if (info.dli_fname) {
-            moduleName = info.dli_fname;
-        }
-        if (symbolName.empty() && info.dli_sname) {
-            symbolName = info.dli_sname;
-        }
-    } else if (!thiz->getSymbolFromCache(instAnalysis->address, &moduleName, &offset)) {
-        moduleName = "unknown";
-    }
+    thiz->findSymbol(instAnalysis->address, &moduleName, &symbolName, &offset);
+    symbolName = checkNameLength(symbolName);
+    moduleName = checkNameLength(moduleName);
 
     // 省略过长符号名
-    if (symbolName.length() > 30) {
-        symbolName = symbolName.substr(0, 20) + "..." + symbolName.substr(symbolName.length() - 7);
-    }
-    if (moduleName.length() > 30) {
-        moduleName = moduleName.substr(0, 20) + "..." + moduleName.substr(moduleName.length() - 7);
-    }
 
     // 格式化指令信息，地址和反汇编左对齐
     std::string instInfo = xbyl::format_string("[0x%-16lx] %30s[0x%-10lx] %-30s:\t\t\t\t\t %s",
@@ -100,7 +151,32 @@ VMAction showPreInstruction(VM *vm, GPRState *gprState, FPRState *fprState, void
                                                symbolName.c_str(),
                                                instAnalysis->disassembly);
 
-    thiz->log2file("Instruction: %s\n", instInfo.c_str());
+    string callLikeInfo;
+    if (instAnalysis->isBranch || instAnalysis->isCall) {
+        for (int i = 0; i < instAnalysis->numOperands; ++i) {
+            auto op = instAnalysis->operands[i];
+            string regName, targetSymbol, targetModule;
+            uint64_t targetOffset, targetAddress = 0;;
+            if (op.type == OPERAND_GPR) {
+                regName = op.regName;
+                if (regName == "LR") {
+                    continue;
+                }
+                targetAddress = QBDI_GPR_GET(gprState, op.regCtxIdx);
+            } else {
+                continue;
+            }
+            thiz->findSymbol(targetAddress, &targetModule, &targetSymbol, &targetOffset);
+            targetModule = checkNameLength(targetModule);
+            targetSymbol = checkNameLength(targetSymbol);
+            callLikeInfo += xbyl::format_string("%s:[%s:%s][0x%x]\t",
+                                                regName.c_str(),
+                                                targetModule.c_str(),
+                                                targetSymbol.c_str(),
+                                                targetOffset);
+        }
+    }
+    thiz->log2file("Instruction: %s\t\t%s\n", instInfo.c_str(), callLikeInfo.c_str());
 
     // 记录读取的寄存器状态
     std::string regOutput;
